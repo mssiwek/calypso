@@ -4,10 +4,11 @@ import numpy as np
 from .io import load_model_any
 from .decoding import decode_prediction
 from ..utils.plotting import make_time_grid
+import pickle as pkl
 
 class Emulator:
-    def __init__(self, cfg: dict):
-        self.cfg = dict(cfg)  # shallow copy
+    def __init__(self):
+        self.model_paths = pkl.load(open("../assets/models.json", "rb"))
 
     def load_model(self, path: str) -> None:
         print(f"Loading model from {path}")
