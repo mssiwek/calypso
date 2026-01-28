@@ -72,7 +72,6 @@ def load_model_any(fp: str, *, model_class: Optional[str] = None) -> Tuple[Any, 
     obj = cpu_safe_load(fp, allow_full_pickle=True)  # or via env CALYPSO_ALLOW_PICKLE=1
     
     print(f"Loaded object type from {fp}: {type(obj)}")
-    exit()
 
     if isinstance(obj, tuple) and len(obj) == 2:
         model, meta = obj
