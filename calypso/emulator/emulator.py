@@ -10,6 +10,7 @@ from .io import cpu_safe_load
 import importlib.util
 import sys
 from functools import reduce
+from constants import DEFAULT_WEIGHTS_DIR
 
 @dataclass
 class Emulator:
@@ -89,7 +90,8 @@ def _import_fqcn(ckpt_fqcn: str):
     return _getattr_dotted(models_mod, attr)
 
 
-def load_emulator(fp: Union[str, Path], device: str = "auto") -> Emulator:
+def load_emulator(component: str, device: str = "auto") -> Emulator:
+    fp = Path(DEFAULT_WEIGHTS_DIR) / f"calypso_{component}.pkl"
     ckpt = cpu_safe_load(str(fp), allow_full_pickle=True)
 
     # Pick a device for inference
