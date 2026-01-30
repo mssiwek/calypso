@@ -6,11 +6,13 @@ import torch
 from ..utils.constants import TMOD_PATH, norb, nbins
 from .decoding import decode_prediction
 from ..utils.plotting import make_time_grid
+from ..utils.zdownload import download_models
 from .io import cpu_safe_load
 import importlib.util
 import sys
 from functools import reduce
 from ..utils.constants import DEFAULT_WEIGHTS_DIR
+
 
 @dataclass
 class Emulator:
@@ -18,6 +20,12 @@ class Emulator:
     device: torch.device
     sequence_length: Optional[int] = None
     meta: Dict[str, Any] = None
+    
+    
+    def __init__(self, *args, **kwargs):
+        super(CLASS_NAME, self).__init__(*args, **kwargs)
+        download_models()
+    
 
 	# "@torch.inference_mode()" is equivalent to "with torch.no_grad():"
     @torch.inference_mode()
@@ -76,15 +84,12 @@ def _extract_attr_tail(ckpt_fqcn: str) -> str:
     return tail
 
 def _import_fqcn(ckpt_fqcn: str):
-    print("ckpt_fqcn =", ckpt_fqcn)
 
     # Always load canonical definitions from TMOD_PATH
     # IMPORTANT: TMOD_PATH should be a real filesystem path to models/models.py
     models_mod = _load_module_from_file(Path(TMOD_PATH), module_name="_calypso_models")
 
     attr = _extract_attr_tail(ckpt_fqcn)
-    print("using TMOD_PATH =", str(Path(TMOD_PATH).resolve()))
-    print("attr =", attr)
 
     return _getattr_dotted(models_mod, attr)
 
