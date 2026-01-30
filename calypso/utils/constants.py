@@ -7,9 +7,6 @@ PB = 2 * np.pi
 norb = 10
 nbins = 100
 
-
-from pathlib import Path
-
 PKG_DIR = Path(__file__).resolve().parents[1]          # .../calypso/calypso
 REPO_ARTIFACTS_DIR = PKG_DIR.parent / ".calypso"     # pre-install only
 CACHE_DIR = Path.home() / ".cache" / "calypso"       # runtime downloads
@@ -18,3 +15,5 @@ BUNDLED_MANIFEST = REPO_ARTIFACTS_DIR / "assets" / "zenodo_manifest.json"
 CACHED_MANIFEST  = CACHE_DIR / "assets" / "zenodo_manifest.json"
 
 DEFAULT_WEIGHTS_DIR = CACHE_DIR / "weights"            # keep override logic in download.py
+
+TMOD_PATH = PKG_DIR / "models" / "models.py"
