@@ -3,14 +3,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 import torch
-from utils.constants import TMOD_PATH, norb, nbins
+from ..utils.constants import TMOD_PATH, norb, nbins
 from .decoding import decode_prediction
-from utils.plotting import make_time_grid
+from ..utils.plotting import make_time_grid
 from .io import cpu_safe_load
 import importlib.util
 import sys
 from functools import reduce
-from constants import DEFAULT_WEIGHTS_DIR
+from ..utils.constants import DEFAULT_WEIGHTS_DIR
 
 @dataclass
 class Emulator:
@@ -31,7 +31,6 @@ class Emulator:
         y = y.squeeze(0).cpu()
         
         time = make_time_grid(norb, nbins*norb)
-        print("y.shape =", y.shape)
         mean, p16, p84 = decode_prediction(y, log_model=True)
         
         return {"time": time, "mean": mean, "p16": p16, "p84": p84}
