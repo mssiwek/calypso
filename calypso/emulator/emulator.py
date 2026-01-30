@@ -20,12 +20,6 @@ class Emulator:
     device: torch.device
     sequence_length: Optional[int] = None
     meta: Dict[str, Any] = None
-    
-    
-    def __init__(self, *args, **kwargs):
-        super(CLASS_NAME, self).__init__(*args, **kwargs)
-        download_models()
-    
 
 	# "@torch.inference_mode()" is equivalent to "with torch.no_grad():"
     @torch.inference_mode()
