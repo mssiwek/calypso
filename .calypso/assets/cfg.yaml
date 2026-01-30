@@ -6,7 +6,7 @@
 
 paths:
   data: "./data/TimeSeries"
-  training_root: "./results/" # root directory where training outputs will be saved
+  training_root: "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/" # root directory where training outputs will be saved
 
 run:
   id: "hparam_study"
@@ -25,9 +25,10 @@ fixed:
   nbins: 100
   log: True
   ld: 64
+  min_epochs: 5000
   num_epochs: 10000
   patience: 1000
-  checkpoint_interval: 100
+  checkpoint_interval: 500
   validate: 1
   eps: 1e-8
   dropout: 0.0
@@ -42,7 +43,7 @@ fixed:
 
 slurm:
   partition: "gpu_requeue"
-  mem: "16G"
+  mem: "2G"
   time: "1-00:00:00"
   gpus: 1
   mail_types: "START,FAIL,END"
