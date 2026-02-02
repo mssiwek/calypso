@@ -20,6 +20,10 @@ class Emulator:
     device: torch.device
     sequence_length: Optional[int] = None
     meta: Dict[str, Any] = None
+    
+    print("Ensuring models are downloaded...")
+    download_models()
+    print("Models are ready.")
 
 	# "@torch.inference_mode()" is equivalent to "with torch.no_grad():"
     @torch.inference_mode()

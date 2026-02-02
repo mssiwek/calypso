@@ -9,8 +9,14 @@ from .constants import BUNDLED_MANIFEST, CACHED_MANIFEST, DEFAULT_WEIGHTS_DIR
 
 def _ensure_cached_manifest() -> Path:
     CACHED_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    #if cached manifest does not exist, copy from bundled
     if not CACHED_MANIFEST.exists():
         shutil.copy2(BUNDLED_MANIFEST, CACHED_MANIFEST)
+    #if cached manifest exists, but is older than bundled, update it
+    elif BUNDLED_MANIFEST.stat().st_mtime > CACHED_MANIFEST.stat().st_mtime:
+        shutil.copy2(BUNDLED_MANIFEST, CACHED_MANIFEST)
+    else:
+        print("Cached manifest is up to date.")
     return CACHED_MANIFEST
 
 def load_manifest() -> dict:
