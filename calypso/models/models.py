@@ -35,7 +35,7 @@ class LSTMRegressor(nn.Module):
         # time embeddings
         self.time_embedding = nn.Embedding(max_len, latent_dim)
 
-        self.lstm = nn.LSTM(input_size=latent_dim, \
+        self.lstm = nn.LSTM(input_size=latent_dim*2, \
                             hidden_size=hidden_size, \
                             num_layers=num_layers, \
                             batch_first=True, dropout=dropout)
@@ -84,15 +84,16 @@ class LSTMRegressor(nn.Module):
         # Encode (e_b, q_b) → latent
         z = self.latent(input)  # (B, latent_dim)
         z = z.unsqueeze(1) 
-
         # Create time indices [0, 1, ..., T-1]
         t_idx = torch.arange(sequence_length, device=device).unsqueeze(0).repeat(B, 1)  # (B, T)
-
         # Get time embeddings
         t_emb = self.time_embedding(t_idx)  # (B, T, latent_dim)
-
-        # Add time signal to latent z → (B, T, latent_dim)
-        z_seq = z + t_emb
+        
+        # OLD: Add time signal to latent z → (B, T, latent_dim)
+        # z_seq = z + t_emb
+        
+        # NEW: Concatenate time signal to latent z → (B, T, latent_dim*2)
+        z_seq = torch.cat([t_emb, z], dim=-1)  # (B, T, 2*latent_dim)
 
         # LSTM decoding
         lstm_out, hidden = self.lstm(z_seq)  # (B, T, hidden_dim)
