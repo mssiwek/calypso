@@ -1,28 +1,28 @@
 {
   "files": {
     "calypso_M1.pkl": {
-      "checksum": "058c187c19362f8bf0c68f835675d15a",
-      "download_url": "https://sandbox.zenodo.org/records/436109/files/calypso_M1.pkl",
+      "checksum": "d4551eefa354cd8eca482fa24ae4fa40",
+      "download_url": "https://sandbox.zenodo.org/records/436143/files/calypso_M1.pkl",
       "filename": "calypso_M1.pkl",
-      "size": 1379532.0
+      "size": 116183673.0
     },
     "calypso_M2.pkl": {
-      "checksum": "6136292abd2075dd63d7e34513c108c0",
-      "download_url": "https://sandbox.zenodo.org/records/436109/files/calypso_M2.pkl",
+      "checksum": "bb40dab8ce1bf6a13e70a0b621a199bb",
+      "download_url": "https://sandbox.zenodo.org/records/436143/files/calypso_M2.pkl",
       "filename": "calypso_M2.pkl",
-      "size": 11377705.0
+      "size": 65783385.0
     },
     "calypso_Mb.pkl": {
-      "checksum": "80eeaf14e533844793e3976a8ac61347",
-      "download_url": "https://sandbox.zenodo.org/records/436109/files/calypso_Mb.pkl",
+      "checksum": "e184e6976ea9a058eaddd6d9c3de171f",
+      "download_url": "https://sandbox.zenodo.org/records/436143/files/calypso_Mb.pkl",
       "filename": "calypso_Mb.pkl",
-      "size": 3125480.0
+      "size": 90983689.0
     }
   },
   "zenodo": {
-    "deposition_id": 436109,
+    "deposition_id": 436143,
     "host": "https://sandbox.zenodo.org",
-    "record_id": 436109,
+    "record_id": 436143,
     "sandbox": true
   }
 }
