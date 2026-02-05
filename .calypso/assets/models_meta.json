@@ -5,44 +5,44 @@
     "M1": {
       "comp": "M1",
       "hs": 512,
-      "nl": 5,
+      "nl": 6,
       "bs": 5,
       "nwindows": 1,
       "norb": 10,
       "nbins": 100,
-      "epoch": 10067,
+      "epoch": 10272,
       "log": true,
-      "loss": 0.7467330098152161,
+      "loss": 0.6177334189414978,
       "vallf": [
         "MSE"
       ],
       "vallf_weights": [
         1.0
       ],
-      "model_name": "best_M1_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl5_hs512_bs5_log",
-      "src_path": "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/hparam_study/best_models/best_M1_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl5_hs512_bs5_log_epoch10067.pkl",
+      "model_name": "best_M1_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl6_hs512_bs5_log",
+      "src_path": "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/hparam_study/best_models/best_M1_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl6_hs512_bs5_log_epoch10272.pkl",
       "export_path": "/n/home00/msiwek/projects/CALYPSO/research/evaluation/cache/best_M1_hparam_study.pkl",
       "dpath": "/n/home00/msiwek/projects/CALYPSO/research/data/TimeSeries"
     },
     "M2": {
       "comp": "M2",
-      "hs": 512,
-      "nl": 3,
+      "hs": 384,
+      "nl": 4,
       "bs": 5,
       "nwindows": 1,
       "norb": 10,
       "nbins": 100,
-      "epoch": 11391,
+      "epoch": 12091,
       "log": true,
-      "loss": 0.5425937175750732,
+      "loss": 0.4231465458869934,
       "vallf": [
         "MSE"
       ],
       "vallf_weights": [
         1.0
       ],
-      "model_name": "best_M2_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl3_hs512_bs5_log",
-      "src_path": "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/hparam_study/best_models/best_M2_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl3_hs512_bs5_log_epoch11391.pkl",
+      "model_name": "best_M2_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl4_hs384_bs5_log",
+      "src_path": "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/hparam_study/best_models/best_M2_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl4_hs384_bs5_log_epoch12091.pkl",
       "export_path": "/n/home00/msiwek/projects/CALYPSO/research/evaluation/cache/best_M2_hparam_study.pkl",
       "dpath": "/n/home00/msiwek/projects/CALYPSO/research/data/TimeSeries"
     },
@@ -56,7 +56,7 @@
       "nbins": 100,
       "epoch": 10735,
       "log": true,
-      "loss": 0.552074670791626,
+      "loss": 0.3744472861289978,
       "vallf": [
         "MSE"
       ],
