@@ -1,10 +1,10 @@
 {
   "weight_cfg": {
     "e_c": 0.2,
-    "lam": 50.0,
+    "lam": 5.0,
     "p": 2.0
   },
-  "use_weights": true,
+  "use_weights": false,
   "train_data": true,
   "config": "./configs/hparam_study.yaml"
 }
