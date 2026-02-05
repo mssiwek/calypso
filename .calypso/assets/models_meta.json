@@ -1,0 +1,72 @@
+{
+  "run_id": "hparam_study",
+  "export_dir": "/n/home00/msiwek/projects/CALYPSO/research/evaluation/cache",
+  "models": {
+    "M1": {
+      "comp": "M1",
+      "hs": 32,
+      "nl": 6,
+      "bs": 5,
+      "nwindows": 1,
+      "norb": 10,
+      "nbins": 100,
+      "epoch": 11548,
+      "log": true,
+      "loss": 1.5572575330734253,
+      "vallf": [
+        "MSE"
+      ],
+      "vallf_weights": [
+        1.0
+      ],
+      "model_name": "best_M1_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl6_hs32_bs5_log",
+      "src_path": "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/hparam_study/best_models/best_M1_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl6_hs32_bs5_log_epoch11548.pkl",
+      "export_path": "/n/home00/msiwek/projects/CALYPSO/research/evaluation/cache/best_M1_hparam_study.pkl",
+      "dpath": "/n/home00/msiwek/projects/CALYPSO/research/data/TimeSeries"
+    },
+    "M2": {
+      "comp": "M2",
+      "hs": 256,
+      "nl": 2,
+      "bs": 5,
+      "nwindows": 1,
+      "norb": 10,
+      "nbins": 100,
+      "epoch": 10312,
+      "log": true,
+      "loss": 1.0163874626159668,
+      "vallf": [
+        "MSE"
+      ],
+      "vallf_weights": [
+        1.0
+      ],
+      "model_name": "best_M2_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl2_hs256_bs5_log",
+      "src_path": "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/hparam_study/best_models/best_M2_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl2_hs256_bs5_log_epoch10312.pkl",
+      "export_path": "/n/home00/msiwek/projects/CALYPSO/research/evaluation/cache/best_M2_hparam_study.pkl",
+      "dpath": "/n/home00/msiwek/projects/CALYPSO/research/data/TimeSeries"
+    },
+    "Mb": {
+      "comp": "Mb",
+      "hs": 64,
+      "nl": 5,
+      "bs": 5,
+      "nwindows": 1,
+      "norb": 10,
+      "nbins": 100,
+      "epoch": 10760,
+      "log": true,
+      "loss": 1.226747989654541,
+      "vallf": [
+        "MSE"
+      ],
+      "vallf_weights": [
+        1.0
+      ],
+      "model_name": "best_Mb_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl5_hs64_bs5_log",
+      "src_path": "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/hparam_study/best_models/best_Mb_MNL_vallfMSE1.0_norb10_nbinsPb100_lr1e-05_nl5_hs64_bs5_log_epoch10760.pkl",
+      "export_path": "/n/home00/msiwek/projects/CALYPSO/research/evaluation/cache/best_Mb_hparam_study.pkl",
+      "dpath": "/n/home00/msiwek/projects/CALYPSO/research/data/TimeSeries"
+    }
+  }
+}
