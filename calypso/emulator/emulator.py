@@ -1,35 +1,78 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
+import json
+import numpy as np
 import torch
 from ..utils.constants import TMOD_PATH, norb, nbins
 from .decoding import decode_prediction
+from .data import TimeSeriesDB
 from ..utils.plotting import make_time_grid
 from ..utils.zdownload import download_models
 from .io import cpu_safe_load
 import importlib.util
 import sys
 from functools import reduce
-from ..utils.constants import DEFAULT_WEIGHTS_DIR
+from ..utils.constants import DEFAULT_WEIGHTS_DIR, DEFAULT_DATA_DIR, DEFAULT_MDATA_DIR
 
 
 @dataclass
-class Emulator:
+class Emulator():
     model: torch.nn.Module
     device: torch.device
     sequence_length: Optional[int] = None
     meta: Dict[str, Any] = None
     
-    print("Ensuring models are downloaded...")
-    download_models()
-    print("Models are ready.")
+    
+    def __post_init__(self):
+        print("Ensuring models are downloaded...")
+        download_models()
+        print("Models are ready.")
+        
 
 	# "@torch.inference_mode()" is equivalent to "with torch.no_grad():"
     @torch.inference_mode()
-    def predict(self, eb: float, qb: float, sequence_length: Optional[int] = None):
+    def predict(self, eb: float, qb: float, sequence_length: Optional[int] = None, fallback: bool = False, tolerance: float = 2e-2) -> Dict[str, np.ndarray]:
+        """
+        Predict accretion rate time series for given (eb, qb).
+        
+        :param self: Description
+        :param eb: Description
+        :type eb: float
+        :param qb: Description
+        :type qb: float
+        :param sequence_length: Description
+        :type sequence_length: Optional[int]
+        :param fallback: Description
+            If True, the emulator returns the training/test data near existing (eb, qb) points
+        """
+        
+        if fallback:
+            tsdb = TimeSeriesDB(
+                comp=self.meta['train_config']["comp"], 
+                nwindows=self.meta['train_config']["nwindows"],
+                norb=self.meta['train_config']["norb"],
+                nbins=self.meta['train_config']["nbins"],
+                log=self.meta['train_config'].get("log_model", True)
+            )
+            DSet = tsdb.loader()
+            
+            # if eb and qb are within a small delta of training/test data points, return those
+            for (eb0, qb0), arr in DSet.items():
+                if abs(eb - eb0) < tolerance and abs(qb - qb0) < tolerance:
+                    print(f"Fallback: returning data for nearby point (eb={eb0}, qb={qb0})")
+                    time = make_time_grid(norb, nbins*norb)
+                    p16 = np.zeros_like(arr)
+                    p84 = np.zeros_like(arr)
+                    return {"time": time, "mean": arr, "p16": p16, "p84": p84}
+                
+                
+        
         self.model.eval()
+        
         T = sequence_length or self.sequence_length
+        print("Predicting with sequence_length =", T)
         if T is None:
             raise ValueError("sequence_length must be provided.")
         x = torch.tensor([[eb, qb]], dtype=torch.float32, device=self.device)
@@ -107,12 +150,15 @@ def load_emulator(component: str, device: str = "auto") -> Emulator:
         model = ModelClass(**model_kwargs)
         model.load_state_dict(ckpt["model_state_dict"])
         model.to(dev)
+        training_data = json.loads(DEFAULT_MDATA_DIR.read_text())["models"][component]
+        merged = ckpt.get("train_config", {}) | training_data
 
         meta = {
             "epoch": ckpt.get("epoch"),
             "saved_as_best": ckpt.get("saved_as_best"),
-            "train_config": ckpt.get("train_config"),
+            "train_config": merged,
         }
+        
         return Emulator(model=model, device=dev, sequence_length=ckpt.get("sequence_length"), meta=meta)
 
     # If it's already a torch.nn.Module, wrap it
