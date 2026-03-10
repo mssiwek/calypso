@@ -14,8 +14,8 @@ CACHE_DIR = Path.home() / ".cache" / "calypso"       # runtime downloads
 BUNDLED_MANIFEST = REPO_ARTIFACTS_DIR / "assets" / "zenodo_manifest.json"
 CACHED_MANIFEST  = CACHE_DIR / "assets" / "zenodo_manifest.json"
 
-DEFAULT_WEIGHTS_DIR = CACHE_DIR / "weights"            # keep override logic in download.py
+DEFAULT_ARTIFACTS_DIR = CACHE_DIR / "artifacts"
+DEFAULT_WEIGHTS_DIR = DEFAULT_ARTIFACTS_DIR
 DEFAULT_DATA_DIR = PKG_DIR.parent / ".calypso" / "TS_data"  # pre-install only
 DEFAULT_MDATA_DIR = PKG_DIR.parent / ".calypso" / "assets" / "models_meta.json"  # pre-install only
-
-TMOD_PATH = PKG_DIR / "models" / "models.py"
+DEFAULT_RUNTIME_META = REPO_ARTIFACTS_DIR / "assets" / "runtime.json"

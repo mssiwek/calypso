@@ -1,49 +1,66 @@
-# =================================================================
-# CALYPSO training configuration for entire hyperparameter study
-# DO NOT RUN unless expecting a large number of jobs to be created,
-# and a lot of computational resources to be used.
-# =================================================================
+# ============================================
+# CALYPSO-PCA multi-component configuration
+# Joint emulator for Mb, M1, and M2 accretion rates
+# ============================================
 
 paths:
-  data: "./data/TimeSeries"
-  training_root: "/n/holystore01/LABS/hernquist_lab/Users/msiwek/CALYPSO/training/" # root directory where training outputs will be saved
+  data: "./data/TimeSeries"          # TS_*.pkl lives here
+  results_root: "./results"         # root where outputs go (results/pca/...)
 
 run:
-  id: "hparam_study"
+  model: "pca"
+  id: "fiducial"     # run family name
   mail: "mss931@nyu.edu"
 
-grid_mode: "cartesian"   # or "cartesian"
-
-grid:
-  comp: ["M1", "M2", "Mb"]
-  hs: [16, 32, 64, 128, 256, 384, 512]
-  nl: [1, 2, 3, 4, 5, 6, 7]
-
-fixed:
-  nwindows: 1
+dataset:
+  split_train: "train"
+  split_val: "test"
+  nwindows: 500
   norb: 10
   nbins: 100
-  log: True
-  ld: 64
-  min_epochs: 5000
-  num_epochs: 10000
-  patience: 1000
-  checkpoint_interval: 500
-  validate: 1
-  eps: 1e-8
-  dropout: 0.0
-  activation_function: null
-  sigma: True
-  optimizer: "Adam"
-  lr: 1.0e-5
-  bs: 5
-  lf: "MNL"
-  vallf: ["MSE"]
-  vallf_weights: [1.0]
+  log: true
+  phase_align: true
+  phase_align_fmin: 0.1
+  phase_align_fmax: 5.0
+
+pca:
+  components: ["Mb", "M1", "M2"]      # train joint PCA on all three
+
+basis:
+  k: 100
+  max_windows: null                  # cap total windows loaded (debug)
+  randomized: false                  # if you later add randomized SVD
+
+projection:
+  cov: "full"                        # diag | full
+  shrink: 0.1                        # used if full
+
+interp:
+  kind: "cholesky_linear"
+  epistemic_uncertainty:
+    enabled: false
+    epsilon: 1.e-8
+    alpha: 2.0
+
+validate:
+  split: "test"
+  ncases: 12
+  case_seed: 0
+  plot_space: "linear"               # log | linear
+  nsynth: 500
+  use_nn_corr: true
+  eb_values: [0.55, 0.35, 0.15]
+  qb_values: [0.95, 0.75, 0.45]
+
+outputs:
+  backend_dir: "pca"                 # results/pca/...
+  save_models: true
+  save_coeffs: true
+  save_diagnostics: true
 
 slurm:
-  partition: "gpu_requeue"
-  mem: "2G"
-  time: "1-00:00:00"
-  gpus: 1
+  partition: "cpu_requeue"           # PCA should be CPU-friendly
+  mem: "16G"
+  time: "01:00:00"
+  gpus: 0
   mail_types: "START,FAIL,END"

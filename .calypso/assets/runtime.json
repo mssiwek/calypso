@@ -1,0 +1,15 @@
+{
+  "components": [
+    "Mb",
+    "M1",
+    "M2"
+  ],
+  "dataset": {
+    "log": true,
+    "nbins": 100,
+    "norb": 10,
+    "nwindows": 500
+  },
+  "runtime_artifact": "calypso_pca_emulator.pkl",
+  "source_config": "/Users/magda/Work/projects/ongoing/CALYPSO/calypso-dev/research/configs/pca_multi_component.yaml"
+}

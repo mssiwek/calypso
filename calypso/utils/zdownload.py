@@ -5,7 +5,7 @@ import sys, os, json
 import time 
 from urllib.request import Request, urlopen
 
-from .constants import BUNDLED_MANIFEST, CACHED_MANIFEST, DEFAULT_WEIGHTS_DIR
+from .constants import BUNDLED_MANIFEST, CACHED_MANIFEST, DEFAULT_ARTIFACTS_DIR
 
 def _ensure_cached_manifest() -> Path:
     CACHED_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
@@ -32,16 +32,16 @@ def save_manifest(manifest: dict) -> None:
 def _default_user_dir() -> Path:
     return Path.home() / ".cache" / "calypso"
 
-def _weights_dir() -> Path:
-    #check if calypso weights directory is set by environment variable
-    override = os.environ.get("CALYPSO_WEIGHTS_DIR")
+def _artifacts_dir() -> Path:
+    #check if calypso artifacts directory is set by environment variable
+    override = os.environ.get("CALYPSO_ARTIFACTS_DIR") or os.environ.get("CALYPSO_WEIGHTS_DIR")
     if override:
         d = Path(override).expanduser()
         d.mkdir(parents=True, exist_ok=True)
         return d
 
     #by default, use the package directory 
-    pkg = Path(DEFAULT_WEIGHTS_DIR)
+    pkg = Path(DEFAULT_ARTIFACTS_DIR)
         
     try:
         pkg.mkdir(parents=True, exist_ok=True)
@@ -52,8 +52,8 @@ def _weights_dir() -> Path:
         return pkg
     except Exception as e:
         print("Write test: FAILED ->", repr(e))
-        print("Falling back to user cache directory for weights")
-        d = _default_user_dir() / "weights"
+        print("Falling back to user cache directory for artifacts")
+        d = _default_user_dir() / "artifacts"
         d.mkdir(parents=True, exist_ok=True)
         return d
 
@@ -137,16 +137,16 @@ def _download(url: str, dst: Path, chunk_size: int = 1024 * 1024) -> None:
         raise
 
 
-def download_models(force: bool = False) -> dict[str, Path]:
+def download_artifacts(force: bool = False) -> dict[str, Path]:
     """
-    Download CALYPSO model weights from Zenodo if not already cached.
+    Download CALYPSO runtime artifacts from Zenodo if not already cached.
 
     Returns
     -------
     dict[str, Path]
         Mapping from filename to local cached path.
     """
-    dst_dir = _weights_dir()
+    dst_dir = _artifacts_dir()
         
     out: dict[str, Path] = {}
     
@@ -181,3 +181,7 @@ def download_models(force: bool = False) -> dict[str, Path]:
         out[name] = dst
 
     return out
+
+
+def download_models(force: bool = False) -> dict[str, Path]:
+    return download_artifacts(force=force)

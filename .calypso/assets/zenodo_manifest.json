@@ -1,28 +1,17 @@
 {
   "files": {
-    "calypso_M1.pkl": {
-      "checksum": "d4551eefa354cd8eca482fa24ae4fa40",
-      "download_url": "https://sandbox.zenodo.org/records/436829/files/calypso_M1.pkl",
-      "filename": "calypso_M1.pkl",
-      "size": 116183673.0
-    },
-    "calypso_M2.pkl": {
-      "checksum": "bb40dab8ce1bf6a13e70a0b621a199bb",
-      "download_url": "https://sandbox.zenodo.org/records/436829/files/calypso_M2.pkl",
-      "filename": "calypso_M2.pkl",
-      "size": 65783385.0
-    },
-    "calypso_Mb.pkl": {
-      "checksum": "e184e6976ea9a058eaddd6d9c3de171f",
-      "download_url": "https://sandbox.zenodo.org/records/436829/files/calypso_Mb.pkl",
-      "filename": "calypso_Mb.pkl",
-      "size": 90983689.0
+    "calypso_pca_emulator.pkl": {
+      "checksum": "5506bff4ff09126055777ea85a394424",
+      "download_url": "https://sandbox.zenodo.org/records/469244/files/calypso_pca_emulator.pkl",
+      "filename": "calypso_pca_emulator.pkl",
+      "size": 74811902.0
     }
   },
+  "runtime_artifact": "calypso_pca_emulator.pkl",
   "zenodo": {
-    "deposition_id": 436829,
+    "deposition_id": 469244,
     "host": "https://sandbox.zenodo.org",
-    "record_id": 436829,
+    "record_id": 469244,
     "sandbox": true
   }
 }
