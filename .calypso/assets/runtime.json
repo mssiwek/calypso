@@ -11,5 +11,13 @@
     "nwindows": 500
   },
   "runtime_artifact": "calypso_pca_emulator.pkl",
-  "source_config": "/Users/magda/Work/projects/ongoing/CALYPSO/calypso-dev/research/configs/pca_multi_component.yaml"
+  "source_config": "/Users/magda/Work/projects/ongoing/CALYPSO/calypso-dev/research/configs/pca_multi_component.yaml",
+  "ts_files": [
+    "TS_train_Mb_nwindows500_norb10_nbinsPb100_log.pkl",
+    "TS_train_M1_nwindows500_norb10_nbinsPb100_log.pkl",
+    "TS_train_M2_nwindows500_norb10_nbinsPb100_log.pkl",
+    "TS_test_Mb_nwindows500_norb10_nbinsPb100_log.pkl",
+    "TS_test_M1_nwindows500_norb10_nbinsPb100_log.pkl",
+    "TS_test_M2_nwindows500_norb10_nbinsPb100_log.pkl"
+  ]
 }

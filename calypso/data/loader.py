@@ -28,7 +28,24 @@ class TSFileSpec:
         return RAW_TS_DIR / self.filename()
 
 
+def _ensure_dataset_available(path: Path) -> None:
+    if path.exists():
+        return
+    try:
+        # Available in the promoted calypso package after import rewriting.
+        from ..utils.zdownload import download_ts_files  # type: ignore
+    except Exception:
+        try:
+            # Fallback if calypso is importable alongside research sources.
+            from calypso.utils.zdownload import download_ts_files  # type: ignore
+        except Exception:
+            return
+    download_ts_files([path.name])
+
+
 def _load_dataset(path: Path):
+    if not path.exists():
+        _ensure_dataset_available(path)
     if not path.exists():
         raise FileNotFoundError(f"Cannot find dataset file: {path}")
     with open(path, "rb") as f:

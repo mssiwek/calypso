@@ -1,17 +1,53 @@
 {
   "files": {
+    "TS_test_M1_nwindows500_norb10_nbinsPb100_log.pkl": {
+      "checksum": "c2445aac0ea446647b76ed4aab110c18",
+      "download_url": "https://sandbox.zenodo.org/records/469630/files/TS_test_M1_nwindows500_norb10_nbinsPb100_log.pkl",
+      "filename": "TS_test_M1_nwindows500_norb10_nbinsPb100_log.pkl",
+      "size": 26053953.0
+    },
+    "TS_test_M2_nwindows500_norb10_nbinsPb100_log.pkl": {
+      "checksum": "66a5c0015941de89fc15458c2f751a51",
+      "download_url": "https://sandbox.zenodo.org/records/469630/files/TS_test_M2_nwindows500_norb10_nbinsPb100_log.pkl",
+      "filename": "TS_test_M2_nwindows500_norb10_nbinsPb100_log.pkl",
+      "size": 26053953.0
+    },
+    "TS_test_Mb_nwindows500_norb10_nbinsPb100_log.pkl": {
+      "checksum": "1d99359417b6f94fdbc5af2bf6e7ccd7",
+      "download_url": "https://sandbox.zenodo.org/records/469630/files/TS_test_Mb_nwindows500_norb10_nbinsPb100_log.pkl",
+      "filename": "TS_test_Mb_nwindows500_norb10_nbinsPb100_log.pkl",
+      "size": 26053953.0
+    },
+    "TS_train_M1_nwindows500_norb10_nbinsPb100_log.pkl": {
+      "checksum": "41cbbaf62c0f615e80ca41004fa95a80",
+      "download_url": "https://sandbox.zenodo.org/records/469630/files/TS_train_M1_nwindows500_norb10_nbinsPb100_log.pkl",
+      "filename": "TS_train_M1_nwindows500_norb10_nbinsPb100_log.pkl",
+      "size": 200401964.0
+    },
+    "TS_train_M2_nwindows500_norb10_nbinsPb100_log.pkl": {
+      "checksum": "49b53b6a63ea3c02db226d37ed4f6008",
+      "download_url": "https://sandbox.zenodo.org/records/469630/files/TS_train_M2_nwindows500_norb10_nbinsPb100_log.pkl",
+      "filename": "TS_train_M2_nwindows500_norb10_nbinsPb100_log.pkl",
+      "size": 200401964.0
+    },
+    "TS_train_Mb_nwindows500_norb10_nbinsPb100_log.pkl": {
+      "checksum": "2f4b4e7709be358598abeaebdf1d31fb",
+      "download_url": "https://sandbox.zenodo.org/records/469630/files/TS_train_Mb_nwindows500_norb10_nbinsPb100_log.pkl",
+      "filename": "TS_train_Mb_nwindows500_norb10_nbinsPb100_log.pkl",
+      "size": 200401964.0
+    },
     "calypso_pca_emulator.pkl": {
       "checksum": "5506bff4ff09126055777ea85a394424",
-      "download_url": "https://sandbox.zenodo.org/records/469244/files/calypso_pca_emulator.pkl",
+      "download_url": "https://sandbox.zenodo.org/records/469630/files/calypso_pca_emulator.pkl",
       "filename": "calypso_pca_emulator.pkl",
       "size": 74811902.0
     }
   },
   "runtime_artifact": "calypso_pca_emulator.pkl",
   "zenodo": {
-    "deposition_id": 469244,
+    "deposition_id": 469630,
     "host": "https://sandbox.zenodo.org",
-    "record_id": 469244,
+    "record_id": 469630,
     "sandbox": true
   }
 }

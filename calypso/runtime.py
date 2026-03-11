@@ -5,7 +5,7 @@ from pathlib import Path
 
 from .reconstruction.emulator import PCAEmulator
 from .utils.constants import DEFAULT_RUNTIME_META
-from .utils.zdownload import download_artifacts, load_manifest
+from .utils.zdownload import download_files, load_manifest
 
 
 def _default_artifact_name() -> str:
@@ -33,7 +33,7 @@ def _default_artifact_name() -> str:
 
 def load_emulator(artifact_name: str | None = None, force_download: bool = False) -> PCAEmulator:
     selected = artifact_name or _default_artifact_name()
-    artifacts = download_artifacts(force=force_download)
+    artifacts = download_files([selected], force=force_download)
     path = artifacts.get(selected)
     if path is None:
         raise FileNotFoundError(f"Runtime artifact not found in manifest: {selected}")

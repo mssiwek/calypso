@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Dict
 
@@ -7,7 +8,20 @@ import yaml
 
 from .constants import DEFAULT_DATA_DIR
 
-RAW_TS_DIR = Path(DEFAULT_DATA_DIR)
+
+def _resolve_raw_ts_dir() -> Path:
+    env_override = os.environ.get("CALYPSO_TS_DIR")
+    if env_override:
+        path = Path(env_override).expanduser()
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    path = Path(DEFAULT_DATA_DIR)
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+RAW_TS_DIR = _resolve_raw_ts_dir()
 
 
 def ts_filename(
