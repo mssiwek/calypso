@@ -170,15 +170,66 @@ class CholeskyInterpolator:
         with open(filepath, 'rb') as f:
             return pickle.load(f)
 
+    def truncate(self, k: int) -> 'CholeskyInterpolator':
+        """
+        Return a new CholeskyInterpolator using only the first *k* coefficients.
+
+        This slices means, covariances, Cholesky factors, and rebuilds
+        interpolators for the reduced dimensionality.  The result is a
+        self-contained interpolator that can be pickled independently.
+        """
+        if k < 1 or k > self.K:
+            raise ValueError(f"k={k} out of range [1, {self.K}]")
+        if k == self.K:
+            return self
+
+        N = self.points.shape[0]
+        trunc_means = self.coefficient_stats["means"][:, :k]
+        trunc_covs = self.coefficient_stats["covariances"][:, :k, :k]
+        trunc_chol = self.cholesky_factors[:, :k, :k]
+
+        trunc_coeff_stats = {
+            "means": trunc_means,
+            "covariances": trunc_covs,
+        }
+
+        # Rebuild mean interpolators for first k coefficients
+        trunc_mean_interps = []
+        for j in range(k):
+            interp = LinearNDInterpolator(
+                self.points, trunc_means[:, j], fill_value=np.nan
+            )
+            trunc_mean_interps.append(interp)
+
+        # Rebuild Cholesky interpolators for the k×k lower triangle
+        trunc_chol_interps = []
+        for i in range(k):
+            for j in range(i + 1):
+                values = trunc_chol[:, i, j]
+                interp = LinearNDInterpolator(
+                    self.points, values, fill_value=0.0
+                )
+                trunc_chol_interps.append(interp)
+
+        return CholeskyInterpolator(
+            points=self.points,
+            coefficient_stats=trunc_coeff_stats,
+            cholesky_factors=trunc_chol,
+            mean_interpolators=trunc_mean_interps,
+            cholesky_interpolators=trunc_chol_interps,
+            K=k,
+            epistemic_config=dict(self.epistemic_config),
+        )
+
 
 def train_cholesky_interpolator(
     points: np.ndarray,
-    coefficient_stats: Dict[str, np.ndarray], 
+    coefficient_stats: Dict[str, np.ndarray],
     epistemic_config: Dict[str, Any]
 ) -> CholeskyInterpolator:
     """
     Train Cholesky-based interpolator from coefficient statistics.
-    
+
     Parameters
     ----------
     points : np.ndarray, shape (N, 2)
@@ -189,13 +240,13 @@ def train_cholesky_interpolator(
         - 'covariances': np.ndarray, shape (N, K, K) - coefficient covariances per point
     epistemic_config : Dict
         Configuration for epistemic uncertainty estimation
-        
+
     Returns
     -------
     CholeskyInterpolator
         Trained interpolator ready for prediction
     """
-    means = coefficient_stats['means'] 
+    means = coefficient_stats['means']
     covariances = coefficient_stats['covariances']
     
     N, K = means.shape
