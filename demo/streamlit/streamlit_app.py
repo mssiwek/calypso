@@ -1,8 +1,13 @@
 """
-CALYPSO interactive lightcurve explorer — Streamlit edition.
+calypso interactive lightcurve explorer — Streamlit edition.
 
 Generates synthetic LSST-band lightcurves from calypso-emulated accretion
 variability onto circumbinary disk systems.
+
+Directions:
+cd /Users/magda/Work/projects/ongoing/CALYPSO/calypso-dev/calypso
+conda activate py312_calypso
+streamlit run demo/streamlit/streamlit_app.py
 """
 
 import sys
@@ -24,6 +29,12 @@ from lsst import LSST_FILTERS
 from photometry import lum_to_mags
 
 import calypso
+from calypso.data.loader import load_single_component
+
+# Paper colour scheme (Okabe–Ito)
+COLORS = {"Mb": "#0072B2", "M1": "#009E73", "M2": "#D55E00"}
+# Darker variants for true (simulation) curves
+COLORS_TRUE = {"Mb": "#005A8C", "M1": "#007A59", "M2": "#A94600"}
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -50,8 +61,23 @@ st.markdown(
 def _load_emulator():
     return calypso.load_emulator()
 
-emulator = _load_emulator()
-lsst_filters = {band: dict(vals) for band, vals in LSST_FILTERS.items()}
+
+NWINDOWS_TRUE = 500  # window count used in the simulation datasets
+
+
+@st.cache_resource(show_spinner="Loading simulation time series...")
+def _load_true_ts():
+    """Load true time series, index by (split, comp, eb, qb)."""
+    windows = {}
+    for split in ("test", "train"):
+        for comp in ("Mb", "M1", "M2"):
+            X, y = load_single_component(split, comp, NWINDOWS_TRUE, NORB, NBINS, LOG_MODEL)
+            for i in range(len(X)):
+                eb_r = round(float(X[i, 0]), 2)
+                qb_r = round(float(X[i, 1]), 2)
+                windows.setdefault((split, comp, eb_r, qb_r), []).append(y[i])
+    return windows
+
 
 # ---------------------------------------------------------------------------
 # Model constants
@@ -63,18 +89,23 @@ LOG_MODEL = True
 N_ANNULI = 10
 F_EDD = 0.1
 
+emulator = _load_emulator()
+lsst_filters = {band: dict(vals) for band, vals in LSST_FILTERS.items()}
+
 # ---------------------------------------------------------------------------
 # Physics helpers (cached where possible)
 # ---------------------------------------------------------------------------
 
 @st.cache_data(show_spinner=False)
-def get_prediction_samples(eb, qb, n_samples, seed):
-    pred = emulator.predict(eb, qb, n_samples=n_samples, rng=np.random.default_rng(seed))
+def get_prediction_samples(eb, qb, n_samples, seed, epistemic_enabled=True):
+    pred = emulator.predict(eb, qb, n_samples=n_samples, rng=np.random.default_rng(seed),
+                            epistemic_enabled=epistemic_enabled)
     pred_M1 = 10 ** pred["M1"] if LOG_MODEL else pred["M1"]
     pred_M2 = 10 ** pred["M2"] if LOG_MODEL else pred["M2"]
     return pred_M1, pred_M2
 
 
+@st.cache_data(show_spinner=False)
 def get_t(ab, mb):
     Pb = 2 * np.pi * np.sqrt(ab ** 3 / (G * mb))
     t = np.linspace(0, NORB, NBINS * NORB) * Pb
@@ -82,6 +113,7 @@ def get_t(ab, mb):
     return t, t0, Pb
 
 
+@st.cache_data(show_spinner=False)
 def precompute_disk_radii(t, t0, mb, ab, eb, qb):
     radius_primary, radius_secondary = [], []
     qb_re = 1.0 / qb
@@ -107,9 +139,11 @@ def get_band_wavelength_grid(z, band_name):
     return np.logspace(np.log10(band_rest[0]), np.log10(band_rest[1]), 10)
 
 
-def compute_curves(eb, qb, mb, ab, z, band, n_samples, seed):
+@st.cache_data(show_spinner=False)
+def compute_curves(eb, qb, mb, ab, z, band, n_samples, seed, epistemic_enabled=True):
     t, t0, _ = get_t(ab, mb)
-    m1_samples, m2_samples = get_prediction_samples(eb, qb, n_samples=n_samples, seed=seed)
+    m1_samples, m2_samples = get_prediction_samples(eb, qb, n_samples=n_samples, seed=seed,
+                                                     epistemic_enabled=epistemic_enabled)
     lam_cm = get_band_wavelength_grid(z, band)
     radius_primary, radius_secondary = precompute_disk_radii(t, t0, mb, ab, eb, qb)
     lum1 = band_luminosity_samples(m1_samples, radius_primary, lam_cm, mb, qb, F_EDD)
@@ -118,6 +152,70 @@ def compute_curves(eb, qb, mb, ab, z, band, n_samples, seed):
     mag2 = np.asarray(lum_to_mags(lum2, band, z))
     magb = np.asarray(lum_to_mags(lum1 + lum2, band, z))
     return t, mag1, mag2, magb
+
+
+def _find_true_windows(windows, eb, qb, comp, n, seed, tol=0.02):
+    """Return up to *n* true time-series windows (linear scale) or None."""
+    rng = np.random.default_rng(seed)
+    eb_r, qb_r = round(eb, 2), round(qb, 2)
+    for split in ("test", "train"):
+        for (s, c, e, q), arrs in windows.items():
+            if s == split and c == comp and abs(e - eb_r) < tol and abs(q - qb_r) < tol:
+                idxs = rng.choice(len(arrs), size=min(n, len(arrs)), replace=False)
+                out = np.array([arrs[i] for i in idxs])
+                return 10 ** out if LOG_MODEL else out
+    return None
+
+
+
+@st.cache_data(show_spinner=False)
+def compute_true_draws(eb, qb, mb, ab, z, band, n_draws, seed):
+    """Convert *n_draws* true simulation windows to magnitudes."""
+    windows = _load_true_ts()
+    true_seed = seed + 999
+    m1_true = _find_true_windows(windows, eb, qb, "M1", n_draws, true_seed)
+    m2_true = _find_true_windows(windows, eb, qb, "M2", n_draws, true_seed)
+    mb_true = _find_true_windows(windows, eb, qb, "Mb", n_draws, true_seed)
+    if m1_true is None or m2_true is None or mb_true is None:
+        return None
+
+    t, t0, _ = get_t(ab, mb)
+    lam_cm = get_band_wavelength_grid(z, band)
+    radius_primary, radius_secondary = precompute_disk_radii(t, t0, mb, ab, eb, qb)
+
+    lum1 = band_luminosity_samples(m1_true, radius_primary, lam_cm, mb, qb, F_EDD)
+    lum2 = band_luminosity_samples(m2_true, radius_secondary, lam_cm, mb, qb, F_EDD)
+    lumb = band_luminosity_samples(mb_true, radius_primary, lam_cm, mb, qb, F_EDD)
+
+    mag1 = np.asarray(lum_to_mags(lum1, band, z))
+    mag2 = np.asarray(lum_to_mags(lum2, band, z))
+    magb = np.asarray(lum_to_mags(lumb, band, z))
+    return mag1, mag2, magb
+
+
+@st.cache_data(show_spinner="Computing true statistics...")
+def compute_true_stats(eb, qb, mb, ab, z, band):
+    """Push ALL true windows through the pipeline, return mean/std in mag space."""
+    windows = _load_true_ts()
+    # Gather all windows (linear scale) per component
+    comps = {}
+    for comp in ("M1", "M2", "Mb"):
+        w = _find_true_windows(windows, eb, qb, comp, NWINDOWS_TRUE, seed=0)
+        if w is None:
+            return None
+        comps[comp] = w
+
+    t, t0, _ = get_t(ab, mb)
+    lam_cm = get_band_wavelength_grid(z, band)
+    radius_primary, radius_secondary = precompute_disk_radii(t, t0, mb, ab, eb, qb)
+
+    result = {}
+    for comp, radius in [("M1", radius_primary), ("M2", radius_secondary), ("Mb", radius_primary)]:
+        lum = band_luminosity_samples(comps[comp], radius, lam_cm, mb, qb, F_EDD)
+        mag = np.asarray(lum_to_mags(lum, band, z))  # (N_windows, T)
+        result[comp] = {"mean": mag.mean(axis=0), "std": mag.std(axis=0)}
+
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -133,8 +231,18 @@ z = st.sidebar.slider("Redshift $z$", 0.001, 10.0, 0.5, 0.01)
 
 st.sidebar.header("Display")
 band = st.sidebar.selectbox("LSST band", list(LSST_FILTERS.keys()), index=1)
-show_stats = st.sidebar.checkbox("Show mean +/- std", value=False)
-n_samples = st.sidebar.slider("Number of samples", 1, 64, 32, 1) if show_stats else 1
+
+st.sidebar.subheader("CALYPSO (emulated)")
+cal_epistemic = st.sidebar.checkbox("Epistemic uncertainty", value=True, key="cal_epi")
+cal_show_draws = st.sidebar.checkbox("Show realisations", value=True, key="cal_draws")
+cal_n_draws = st.sidebar.slider("Realisations", 1, 64, 1, 1, key="cal_n") if cal_show_draws else 0
+cal_show_stats = st.sidebar.checkbox("Show mean +/- std", value=False, key="cal_stats")
+cal_n_stats = st.sidebar.slider("Samples for stats", 8, 256, 64, 8, key="cal_nstats") if cal_show_stats else 0
+
+st.sidebar.subheader("True (simulation)")
+true_show_draws = st.sidebar.checkbox("Show realisations", value=False, key="true_draws")
+true_n_draws = st.sidebar.slider("Realisations", 1, 64, 1, 1, key="true_n") if true_show_draws else 0
+true_show_stats = st.sidebar.checkbox("Show mean +/- std", value=False, key="true_stats")
 
 if "seed" not in st.session_state:
     st.session_state.seed = 0
@@ -152,26 +260,30 @@ ab = 10 ** log_ab * PC
 # Compute curves
 # ---------------------------------------------------------------------------
 
+# Total emulator samples needed: draws shown individually + stats pool
+cal_total = max(cal_n_draws, cal_n_stats)
+
 with st.spinner("Computing lightcurves..."):
-    t, mag1, mag2, magb = compute_curves(eb, qb, mb, ab, z, band, n_samples, st.session_state.seed)
+    t, mag1, mag2, magb = compute_curves(
+        eb, qb, mb, ab, z, band, cal_total, st.session_state.seed, cal_epistemic,
+    )
+    true_draw_curves = None
+    if true_show_draws and true_n_draws >= 1:
+        true_draw_curves = compute_true_draws(
+            eb, qb, mb, ab, z, band, true_n_draws, st.session_state.seed,
+        )
+    true_stat_curves = None
+    if true_show_stats:
+        true_stat_curves = compute_true_stats(eb, qb, mb, ab, z, band)
 
 t_years = t / YR
 mag_limit = lsst_filters[band]["mag_limit_single"]
 
-# ---------------------------------------------------------------------------
-# Aggregate samples
-# ---------------------------------------------------------------------------
 
-if show_stats and n_samples > 1:
-    magb_mean, magb_std = magb.mean(axis=0), magb.std(axis=0)
-    mag1_mean, mag1_std = mag1.mean(axis=0), mag1.std(axis=0)
-    mag2_mean, mag2_std = mag2.mean(axis=0), mag2.std(axis=0)
-    mode_label = rf"mean $\pm$ 1$\sigma$ over {n_samples} samples"
-else:
-    magb_mean, magb_std = magb[0], np.zeros_like(magb[0])
-    mag1_mean, mag1_std = mag1[0], np.zeros_like(mag1[0])
-    mag2_mean, mag2_std = mag2[0], np.zeros_like(mag2[0])
-    mode_label = "single stochastic sample"
+def _draw_alpha(n):
+    """Line alpha that decreases with the number of overlaid draws."""
+    return np.clip(0.9 / np.sqrt(n), 0.08, 0.9)
+
 
 # ---------------------------------------------------------------------------
 # Build figure
@@ -181,40 +293,99 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 7), sharex=True)
 fig.subplots_adjust(hspace=0.12)
 buffer = 0.02
 
-# -- Top panel: combined Mb --
-ax1.plot(t_years, magb_mean, lw=2.0, color="blue", label=r"$\dot{M}_b$", zorder=2)
-if show_stats and n_samples > 1:
-    ax1.fill_between(t_years, magb_mean - magb_std, magb_mean + magb_std, color="blue", alpha=0.3, zorder=1)
-ylo1 = np.nanmin(magb_mean - magb_std) - buffer
-yhi1 = np.nanmax(magb_mean + magb_std) + buffer
+# Collect all plotted mag values for y-limit computation
+all_magb_vals = []
+all_mag12_vals = []
+
+# -- CALYPSO draws --
+if cal_show_draws and cal_n_draws >= 1:
+    alpha_c = _draw_alpha(cal_n_draws)
+    for i in range(cal_n_draws):
+        label_b = r"combined $\dot{M}_b$" if i == 0 else None
+        label_1 = r"primary $\dot{M}_1$" if i == 0 else None
+        label_2 = r"secondary $\dot{M}_2$" if i == 0 else None
+        ax1.plot(t_years, magb[i], lw=1.6, color=COLORS["Mb"], alpha=alpha_c, label=label_b, zorder=2)
+        ax2.plot(t_years, mag1[i], lw=1.6, color=COLORS["M1"], alpha=alpha_c, label=label_1, zorder=2)
+        ax2.plot(t_years, mag2[i], lw=1.6, color=COLORS["M2"], alpha=alpha_c, label=label_2, zorder=2)
+        all_magb_vals.append(magb[i])
+        all_mag12_vals.extend([mag1[i], mag2[i]])
+
+# -- CALYPSO mean +/- std --
+if cal_show_stats and cal_n_stats >= 2:
+    magb_mean, magb_std = magb[:cal_n_stats].mean(0), magb[:cal_n_stats].std(0)
+    mag1_mean, mag1_std = mag1[:cal_n_stats].mean(0), mag1[:cal_n_stats].std(0)
+    mag2_mean, mag2_std = mag2[:cal_n_stats].mean(0), mag2[:cal_n_stats].std(0)
+    lbl_stats = rf"CALYPSO mean $\pm 1\sigma$ ({cal_n_stats})"
+    ax1.plot(t_years, magb_mean, lw=2.2, color=COLORS["Mb"], label=lbl_stats if not cal_show_draws else None, zorder=4)
+    ax1.fill_between(t_years, magb_mean - magb_std, magb_mean + magb_std, color=COLORS["Mb"], alpha=0.25, zorder=1)
+    ax2.plot(t_years, mag1_mean, lw=2.2, color=COLORS["M1"], label=lbl_stats if not cal_show_draws else None, zorder=4)
+    ax2.fill_between(t_years, mag1_mean - mag1_std, mag1_mean + mag1_std, color=COLORS["M1"], alpha=0.25, zorder=1)
+    ax2.plot(t_years, mag2_mean, lw=2.2, color=COLORS["M2"], zorder=4)
+    ax2.fill_between(t_years, mag2_mean - mag2_std, mag2_mean + mag2_std, color=COLORS["M2"], alpha=0.25, zorder=1)
+    all_magb_vals.extend([magb_mean - magb_std, magb_mean + magb_std])
+    all_mag12_vals.extend([mag1_mean - mag1_std, mag1_mean + mag1_std,
+                           mag2_mean - mag2_std, mag2_mean + mag2_std])
+
+# -- True draws --
+if true_draw_curves is not None:
+    alpha_t = _draw_alpha(len(true_draw_curves[0]))
+    for i in range(len(true_draw_curves[0])):
+        label_b = r"true $\dot{M}_b$" if i == 0 else None
+        label_1 = r"true $\dot{M}_1$" if i == 0 else None
+        label_2 = r"true $\dot{M}_2$" if i == 0 else None
+        ax1.plot(t_years, true_draw_curves[2][i], lw=1.4, ls="--", color=COLORS_TRUE["Mb"], alpha=alpha_t, label=label_b, zorder=3)
+        ax2.plot(t_years, true_draw_curves[0][i], lw=1.4, ls="--", color=COLORS_TRUE["M1"], alpha=alpha_t, label=label_1, zorder=3)
+        ax2.plot(t_years, true_draw_curves[1][i], lw=1.4, ls="--", color=COLORS_TRUE["M2"], alpha=alpha_t, label=label_2, zorder=3)
+        all_magb_vals.append(true_draw_curves[2][i])
+        all_mag12_vals.extend([true_draw_curves[0][i], true_draw_curves[1][i]])
+
+# -- True mean +/- std (from precomputed stats — fast) --
+if true_stat_curves is not None:
+    ts = true_stat_curves
+    lbl_true_stats = r"true mean $\pm 1\sigma$"
+    ax1.plot(t_years, ts["Mb"]["mean"], lw=2.2, ls="--", color=COLORS_TRUE["Mb"], label=lbl_true_stats if true_draw_curves is None else None, zorder=5)
+    ax1.fill_between(t_years, ts["Mb"]["mean"] - ts["Mb"]["std"], ts["Mb"]["mean"] + ts["Mb"]["std"], color=COLORS_TRUE["Mb"], alpha=0.18, zorder=1)
+    ax2.plot(t_years, ts["M1"]["mean"], lw=2.2, ls="--", color=COLORS_TRUE["M1"], label=lbl_true_stats if true_draw_curves is None else None, zorder=5)
+    ax2.fill_between(t_years, ts["M1"]["mean"] - ts["M1"]["std"], ts["M1"]["mean"] + ts["M1"]["std"], color=COLORS_TRUE["M1"], alpha=0.18, zorder=1)
+    ax2.plot(t_years, ts["M2"]["mean"], lw=2.2, ls="--", color=COLORS_TRUE["M2"], zorder=5)
+    ax2.fill_between(t_years, ts["M2"]["mean"] - ts["M2"]["std"], ts["M2"]["mean"] + ts["M2"]["std"], color=COLORS_TRUE["M2"], alpha=0.18, zorder=1)
+    all_magb_vals.extend([ts["Mb"]["mean"] - ts["Mb"]["std"], ts["Mb"]["mean"] + ts["Mb"]["std"]])
+    all_mag12_vals.extend([ts["M1"]["mean"] - ts["M1"]["std"], ts["M1"]["mean"] + ts["M1"]["std"],
+                           ts["M2"]["mean"] - ts["M2"]["std"], ts["M2"]["mean"] + ts["M2"]["std"]])
+
+# -- Y-limits and decorations --
+if all_magb_vals:
+    stacked = np.column_stack(all_magb_vals)
+    ylo1 = np.nanmin(stacked) - buffer
+    yhi1 = np.nanmax(stacked) + buffer
+else:
+    ylo1, yhi1 = 0.0, 1.0
 ax1.set_ylim(ylo1, yhi1)
 ax1.axhspan(mag_limit, yhi1, color="pink", alpha=0.3, label="LSST lim (sv)", zorder=0)
 ax1.set_ylim(ylo1, yhi1)
 ax1.invert_yaxis()
 ax1.set_ylabel(r"$m_{\rm AB}$", fontsize=14)
 ax1.set_title(
-    rf"$\dot{{M}}_b$ magnitude in {band}-band, $e_{{\rm b}}$={eb:.2f}, $q_{{\rm b}}$={qb:.2f} | {mode_label}",
+    rf"$\dot{{M}}_b$ magnitude in {band}-band, $e_{{\rm b}}$={eb:.2f}, $q_{{\rm b}}$={qb:.2f}",
     fontsize=14,
 )
-ax1.legend(fontsize=11, loc="upper right")
+ax1.legend(fontsize=10, loc="upper right")
 ax1.grid(alpha=0.3, linestyle="--")
 plt.setp(ax1.get_xticklabels(), visible=False)
 
-# -- Bottom panel: M1 + M2 --
-ax2.plot(t_years, mag1_mean, lw=2.0, color="teal", label=r"$\dot{M}_1$", zorder=2)
-ax2.plot(t_years, mag2_mean, lw=2.0, color="purple", label=r"$\dot{M}_2$", zorder=2)
-if show_stats and n_samples > 1:
-    ax2.fill_between(t_years, mag1_mean - mag1_std, mag1_mean + mag1_std, color="teal", alpha=0.3, zorder=1)
-    ax2.fill_between(t_years, mag2_mean - mag2_std, mag2_mean + mag2_std, color="purple", alpha=0.3, zorder=1)
-all_lo = min(np.nanmin(mag1_mean - mag1_std), np.nanmin(mag2_mean - mag2_std)) - buffer
-all_hi = max(np.nanmax(mag1_mean + mag1_std), np.nanmax(mag2_mean + mag2_std)) + buffer
+if all_mag12_vals:
+    stacked = np.column_stack(all_mag12_vals)
+    all_lo = np.nanmin(stacked) - buffer
+    all_hi = np.nanmax(stacked) + buffer
+else:
+    all_lo, all_hi = 0.0, 1.0
 ax2.set_ylim(all_lo, all_hi)
 ax2.axhspan(mag_limit, all_hi, color="pink", alpha=0.3, zorder=0)
 ax2.set_ylim(all_lo, all_hi)
 ax2.invert_yaxis()
 ax2.set_ylabel(r"$m_{\rm AB}$", fontsize=14)
-ax2.set_title(rf"$\dot{{M}}_1$ and $\dot{{M}}_2$ | {mode_label}", fontsize=14)
-ax2.legend(fontsize=11, loc="upper right")
+ax2.set_title(r"$\dot{M}_1$ and $\dot{M}_2$", fontsize=14)
+ax2.legend(fontsize=10, loc="upper right")
 ax2.grid(alpha=0.3, linestyle="--")
 
 # x-axis labels in years
@@ -228,3 +399,4 @@ ax2.set_xticklabels(xlabels_str)
 fig.tight_layout()
 st.pyplot(fig)
 plt.close(fig)
+
