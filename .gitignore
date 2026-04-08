@@ -3,3 +3,10 @@ calypso/emulator/__pycache__/
 calypso/utils/__pycache__/
 calypso.egg-info
 .calypso/artifacts/
+
+demo/*.ipynb
+demo/*.png
+demo/compare_radially_steady_vs_variable_models/
+demo/.ipynb_checkpoints/
+demo/csd_radius/
+demo/lsst_magnitude_plots/
