@@ -1,0 +1,6 @@
+streamlit>=1.30
+numpy>=1.22
+scipy>=1.8
+matplotlib>=3.6
+astropy>=5.0
+calypso @ git+https://github.com/mssiwek/calypso.git
