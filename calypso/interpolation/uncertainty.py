@@ -11,36 +11,43 @@ def estimate_epistemic_uncertainty(
     training_points: np.ndarray,
     K: int,  # Number of coefficients
     epsilon: float = 1e-8,
-    alpha: float = 1.0,
+    alpha: float = 2.0,
     
     **kwargs
 ) -> np.ndarray:
     """
-    Estimate epistemic (model) uncertainty based on distance to training data.
-    
-    The uncertainty increases with distance from training points, reflecting
-    reduced confidence in interpolation far from observed data.
-    
+    Estimate epistemic (model) uncertainty at a query point in (eb, qb) space.
+
+    Measures the spatial scatter of the first moment (mean PCA coefficient
+    vectors) across training binaries, weighted by inverse distance to the
+    query point.  Returns a full K×K covariance matrix capturing correlated
+    uncertainty across PCA modes.
+
+    Only the per-binary means are used; per-binary covariance matrices
+    (present in coefficient_stats['covariances']) are not incorporated.
+
     Parameters
     ----------
     coefficient_stats : Dict[str, np.ndarray]
         Dictionary containing:
         - 'means': np.ndarray, shape (N, K) - coefficient means per training point
-        - 'covariances': np.ndarray, shape (N, K, K) - coefficient covariances per point
+        - 'covariances': np.ndarray, shape (N, K, K) - unused by this function
     query_point : np.ndarray, shape (2,)
         Query point (eb, qb)
-    training_points : np.ndarray, shape (N, 2)  
+    training_points : np.ndarray, shape (N, 2)
         Training data points
+    K : int
+        Number of PCA coefficients
     epsilon : float
         Small value to avoid division by zero in distance weighting
     alpha : float
-        Exponent controlling how quickly uncertainty increases with distance
-    
-        
+        Exponent controlling how quickly weights decay with distance
+
     Returns
     -------
-    np.ndarray, shape (K,)
-        Epistemic variance for each coefficient (diagonal uncertainty)
+    np.ndarray, shape (K, K)
+        Epistemic covariance matrix (weighted covariance of training-point
+        mean coefficient vectors around the distance-weighted mean)
     """
     # Compute distances to all training points
     distances = cdist(query_point.reshape(1, -1), training_points, metric='euclidean') # (1, N)
