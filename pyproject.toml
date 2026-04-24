@@ -4,14 +4,54 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "calypso"
-version = "0.0.0"
+version = "1.0.0"
+description = "Parameter-conditioned stochastic surrogate model for circumbinary accretion time-series"
+readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Magdalena Siwek", email = "mss931@nyu.edu" },
+]
+keywords = [
+    "astrophysics",
+    "circumbinary",
+    "accretion",
+    "emulator",
+    "PCA",
+    "lightcurves",
+    "MBHB",
+    "LSST",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
     "numpy>=1.22",
     "scipy>=1.8",
     "pyyaml>=6.0",
     "dill>=0.3",
 ]
+
+[project.optional-dependencies]
+demo = [
+    "matplotlib>=3.6",
+    "astropy>=5.0",
+    "jupyter>=1.0",
+    "streamlit>=1.30",
+]
+
+[project.urls]
+Homepage = "https://github.com/mssiwek/calypso"
+Repository = "https://github.com/mssiwek/calypso"
+Issues = "https://github.com/mssiwek/calypso/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

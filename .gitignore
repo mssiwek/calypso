@@ -3,6 +3,7 @@ calypso/emulator/__pycache__/
 calypso/utils/__pycache__/
 calypso.egg-info
 .calypso/artifacts/
+.claude/
 
 demo/*.ipynb
 demo/*.png
