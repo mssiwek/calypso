@@ -139,8 +139,8 @@ def precompute_disk_radii(t, t0, mb, ab, eb, qb):
     radius_primary, radius_secondary = [], []
     qb_re = 1.0 / qb
     for t_i in t:
-        radius_primary.append(ad.radius_minidisk(t_i, t0, mb, ab, eb, qb_re, n_annuli=N_ANNULI))
-        radius_secondary.append(ad.radius_minidisk(t_i, t0, mb, ab, eb, qb, n_annuli=N_ANNULI))
+        radius_primary.append(ad.radius_minidisk(t_i, t0, mb, ab, eb, qb_re, n_annuli=N_ANNULI, r_ER=True))
+        radius_secondary.append(ad.radius_minidisk(t_i, t0, mb, ab, eb, qb, n_annuli=N_ANNULI, r_ER=True))
     return np.asarray(radius_primary), np.asarray(radius_secondary)
 
 
@@ -167,7 +167,8 @@ def compute_curves(eb, qb, mb, ab, z, band, n_samples, seed, f_edd, epistemic_en
                                                      epistemic_enabled=epistemic_enabled)
     lam_cm = get_band_wavelength_grid(z, band)
     radius_primary, radius_secondary = precompute_disk_radii(t, t0, mb, ab, eb, qb)
-    lum1 = band_luminosity_samples(m1_samples, radius_primary, lam_cm, mb, qb, f_edd)
+    qb_re = 1.0 / qb
+    lum1 = band_luminosity_samples(m1_samples, radius_primary, lam_cm, mb, qb_re, f_edd)
     lum2 = band_luminosity_samples(m2_samples, radius_secondary, lam_cm, mb, qb, f_edd)
     mag1 = np.asarray(lum_to_mags(lum1, band, z))
     mag2 = np.asarray(lum_to_mags(lum2, band, z))
@@ -204,7 +205,8 @@ def compute_true_draws(eb, qb, mb, ab, z, band, n_draws, seed, f_edd):
     lam_cm = get_band_wavelength_grid(z, band)
     radius_primary, radius_secondary = precompute_disk_radii(t, t0, mb, ab, eb, qb)
 
-    lum1 = band_luminosity_samples(m1_true, radius_primary, lam_cm, mb, qb, f_edd)
+    qb_re = 1.0 / qb
+    lum1 = band_luminosity_samples(m1_true, radius_primary, lam_cm, mb, qb_re, f_edd)
     lum2 = band_luminosity_samples(m2_true, radius_secondary, lam_cm, mb, qb, f_edd)
     lumb = band_luminosity_samples(mb_true, radius_primary, lam_cm, mb, qb, f_edd)
 

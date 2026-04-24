@@ -96,7 +96,7 @@ def steady_csd_radius(ab):
     return r_csd
 
 
-def radius_minidisk(t, t0, mb, ab, eb, qb, n_annuli=100, r_ER=True):
+def radius_minidisk(t, t0, mb, ab, eb, qb, n_annuli=100, r_ER=False):
     """
     Calculate the disk annuli around a black hole.
 
