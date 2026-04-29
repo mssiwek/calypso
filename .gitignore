@@ -1,8 +1,10 @@
 __pycache__/
 calypso/emulator/__pycache__/
 calypso/utils/__pycache__/
-calypso.egg-info
-.calypso/artifacts/
+calypso.egg-info/
+build/
+dist/
+*.egg-info/
 .claude/
 
 demo/*.ipynb

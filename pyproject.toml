@@ -56,3 +56,6 @@ Issues = "https://github.com/mssiwek/calypso/issues"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["calypso", "calypso*"]
+
+[tool.setuptools.package-data]
+calypso = ["assets/*.json", "assets/*.yaml"]
