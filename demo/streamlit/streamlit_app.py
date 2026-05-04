@@ -63,7 +63,11 @@ st.set_page_config(
 st.title("calypso: a parameter-conditioned stochastic timeseries emulator")
 st.markdown(
     "calypso generates synthetic timeseries conditioned on two real-valued "
-    "parameters, drawn from a learned latent-space Gaussian. "
+    "parameters. The data is decomposed into a PCA basis, and the resulting "
+    "coefficients — both their central values and uncertainties — are modeled "
+    "as a parameter-conditioned multivariate Gaussian. Drawing samples from "
+    "this distribution and recombining them with the basis yields new "
+    "realizations of the timeseries. "
     "This demo applies it to **circumbinary accretion**: explore how lightcurve "
     "morphology changes with binary eccentricity $e_b$ and mass ratio $q_b$. "
     "Accretion rates are emulated by calypso; luminosities are computed via an "
