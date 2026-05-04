@@ -78,19 +78,31 @@ def fit_pca_svd(X: np.ndarray, k: Optional[int] = None) -> PCAModel:
     mean = X.mean(axis=0)
     Xc = X - mean
 
-    # Full SVD; for huge N you can swap in randomized later if needed.
-    # Xc = U S Vt
-    # U are the left singular vectors (N, r)
-    # S is a matrix of the singular values (r,)
-    # Vt are the right singular vectors (r, T)
+    r = min(N, T)
+
+    # Always use full_matrices=False to avoid allocating (N, N) for U.
+    # When N >= T this already gives Vt as (T, T) — all T basis vectors.
+    # When N < T, Vt is (N, T) — only N vectors; the remaining T-N
+    # null-space directions are appended below via QR completion.
     U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
 
-    r = min(N, T)
     if k is None:
         k = r
-    k = int(min(k, r))
+    k = int(min(k, T))  # can't exceed feature dimension
+
+    if k > Vt.shape[0]:
+        # Need null-space basis vectors (only when N < T and k > N).
+        # Orthogonal complement via QR of Vt^T.
+        Q, _ = np.linalg.qr(Vt.T, mode="complete")  # (T, T)
+        null_vecs = Q[:, Vt.shape[0]:].T              # (T - N, T)
+        Vt = np.vstack([Vt, null_vecs])
+
     Vt_k = Vt[:k]
-    S_k = S[:k]
+    # Singular values: pad with zeros if k > r (null-space components)
+    if k > len(S):
+        S_k = np.concatenate([S, np.zeros(k - len(S))])
+    else:
+        S_k = S[:k]
 
     # Explained variance for PCA from SVD:
     # eigenvalues of covariance = S^2 / (N-1)
