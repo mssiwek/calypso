@@ -1,6 +1,11 @@
 # calypso
 
+[![Try it on Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://calypso.streamlit.app/)
+[![PyPI](https://img.shields.io/pypi/v/calypso-emulator.svg)](https://pypi.org/project/calypso-emulator/)
+
 **calypso** (Circumbinary Accretion Lightcurves Yielded via Predictive Sequence Outputs) is a parameter-conditioned stochastic surrogate model for circumbinary accretion time-series. Given a binary eccentricity `eb` and mass ratio `qb`, calypso returns synthetic accretion-rate light curves for the total binary (`Mb`) and each component (`M1`, `M2`), drawn from a multivariate Gaussian over a global PCA basis trained on hydrodynamic simulations.
+
+**▶ Try it interactively:** [calypso.streamlit.app](https://calypso.streamlit.app/) — sliders for $e_b$, $q_b$, mass, redshift, LSST band; renders synthetic light curves in real time.
 
 ## Method (Short)
 
