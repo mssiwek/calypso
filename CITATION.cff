@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use calypso in your work, please cite both the software (this entry) and the accompanying paper (when available)."
+title: "calypso: a parameter-conditioned stochastic surrogate model for circumbinary accretion time-series"
+type: software
+authors:
+  - family-names: Siwek
+    given-names: Magdalena
+    email: mss931@nyu.edu
+version: "1.0.1"
+date-released: "2026-05-04"
+doi: "10.5281/zenodo.20028473"
+url: "https://github.com/mssiwek/calypso"
+repository-code: "https://github.com/mssiwek/calypso"
+license: MIT
+keywords:
+  - astrophysics
+  - circumbinary
+  - accretion
+  - emulator
+  - PCA
+  - lightcurves
+  - MBHB
+  - LSST
+  - timeseries
+  - surrogate-model
+references:
+  - type: data
+    title: "calypso: trained PCA runtime artifact and training/evaluation dataset"
+    authors:
+      - family-names: Siwek
+        given-names: Magdalena
+    year: 2026
+    doi: "10.5281/zenodo.20027761"
+  - type: article
+    title: "calypso: a Parameter-Conditioned Stochastic Surrogate Model for Circumbinary Accretion Time-Series"
+    authors:
+      - family-names: Siwek
+        given-names: Magdalena
+    year: 2026
+    notes: "in preparation"

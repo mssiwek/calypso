@@ -2,6 +2,8 @@
 
 [![Try it on Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://calypso.streamlit.app/)
 [![PyPI](https://img.shields.io/pypi/v/calypso-emulator.svg)](https://pypi.org/project/calypso-emulator/)
+[![DOI (code)](https://zenodo.org/badge/DOI/10.5281/zenodo.20028473.svg)](https://doi.org/10.5281/zenodo.20028473)
+[![DOI (artifact)](https://zenodo.org/badge/DOI/10.5281/zenodo.20027761.svg)](https://doi.org/10.5281/zenodo.20027761)
 
 **calypso** (Circumbinary Accretion Lightcurves Yielded via Predictive Sequence Outputs) is a parameter-conditioned stochastic surrogate model for circumbinary accretion time-series. Given a binary eccentricity `eb` and mass ratio `qb`, calypso returns synthetic accretion-rate light curves for the total binary (`Mb`) and each component (`M1`, `M2`), drawn from a multivariate Gaussian over a global PCA basis trained on hydrodynamic simulations.
 
@@ -92,9 +94,21 @@ Notebooks and example scripts live in [`demo/`](demo/) and are intended to be re
 
 ## Citation
 
-If you use calypso in your work, please cite:
+If you use calypso in your work, please cite **the software** and (when available) the paper.
+
+**Software:**
+
+> Siwek, M. (2026). *calypso: a parameter-conditioned stochastic surrogate model for circumbinary accretion time-series*. Zenodo. https://doi.org/10.5281/zenodo.20028473
+
+**Trained model + dataset:**
+
+> Siwek, M. (2026). *calypso: trained PCA runtime artifact and training/evaluation dataset*. Zenodo. https://doi.org/10.5281/zenodo.20027761
+
+**Paper:**
 
 > Siwek et al. (2026), *calypso: a Parameter-Conditioned Stochastic Surrogate Model for Circumbinary Accretion Time-Series*. (in prep.)
+
+The DOIs above are *concept DOIs* — they always resolve to the latest version. For paper reproducibility, cite the version DOIs instead: code v1.0.0 = `10.5281/zenodo.20028474`, artifact v1 = `10.5281/zenodo.20027762`.
 
 ## License
 
