@@ -187,8 +187,14 @@ class PCAEmulator:
     @classmethod
     def load(cls, filepath: str | Path) -> 'PCAEmulator':
         """Load complete emulator from file."""
+        class _RemappingUnpickler(pickle.Unpickler):
+            def find_class(self, module, name):
+                if module == "calypsopca" or module.startswith("calypsopca."):
+                    module = "calypso" + module[len("calypsopca"):]
+                return super().find_class(module, name)
+
         with open(filepath, 'rb') as f:
-            save_data = pickle.load(f)
+            save_data = _RemappingUnpickler(f).load()
         
         # Reconstruct PCA model
         pca_dict = save_data['pca_model']
