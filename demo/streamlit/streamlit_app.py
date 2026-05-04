@@ -37,8 +37,8 @@ COLORS = {"Mb": "#0072B2", "M1": "#009E73", "M2": "#D55E00"}
 # Initial UI settings — change these to set the default app state
 # ---------------------------------------------------------------------------
 
-EB0 = 0.0
-QB0 = 1.0
+EB0 = 0.53
+QB0 = 0.67
 LOG_MB0 = 7.0
 LOG_AB0 = -3.0
 Z0 = 0.5
@@ -47,9 +47,9 @@ BAND0 = "g"  # must be a key of LSST_FILTERS
 
 CAL_EPISTEMIC0 = True
 CAL_SHOW_DRAWS0 = True
-CAL_N_DRAWS0 = 10
+CAL_N_DRAWS0 = 5
 CAL_SHOW_STATS0 = True
-CAL_N_STATS0 = 64
+CAL_N_STATS0 = 10
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -73,6 +73,12 @@ st.markdown(
     "Accretion rates are emulated by calypso; luminosities are computed via an "
     "$\\alpha$-disk model with blackbody emission integrated over LSST "
     "photometric bands."
+)
+
+st.markdown(
+    "**Source code:** [github.com/mssiwek/calypso](https://github.com/mssiwek/calypso) "
+    " · **Install:** `pip install calypso-emulator` "
+    " · **Software DOI:** [10.5281/zenodo.20028473](https://doi.org/10.5281/zenodo.20028473)"
 )
 
 with st.expander("About calypso — method details", expanded=True):
@@ -214,7 +220,7 @@ st.sidebar.header("Display")
 _band_keys = list(LSST_FILTERS.keys())
 band = st.sidebar.selectbox("LSST band", _band_keys, index=_band_keys.index(BAND0))
 
-st.sidebar.subheader("calypso (emulated)")
+st.sidebar.subheader("calypso settings")
 cal_epistemic = st.sidebar.checkbox("Epistemic uncertainty", value=CAL_EPISTEMIC0, key="cal_epi")
 cal_show_draws = st.sidebar.checkbox("Show realisations", value=CAL_SHOW_DRAWS0, key="cal_draws")
 cal_n_draws = st.sidebar.slider("Realisations", 1, 64, CAL_N_DRAWS0, 1, key="cal_n") if cal_show_draws else 0
