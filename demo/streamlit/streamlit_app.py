@@ -63,23 +63,65 @@ TRUE_SHOW_STATS0 = False
 # ---------------------------------------------------------------------------
 
 st.set_page_config(
-    page_title="CALYPSO Lightcurve Explorer",
+    page_title="calypso timeseries emulator",
     layout="wide",
 )
 
-st.title("CALYPSO: Circumbinary Accretion Lightcurve Explorer")
+st.title("calypso: a parameter-conditioned stochastic timeseries emulator")
 st.markdown(
-    "Explore how lightcurve morphology changes with binary parameters.  "
-    "Accretion rates are emulated by **CALYPSO**; luminosities are computed "
-    "via an $\\alpha$-disk model with blackbody emission integrated over "
-    "LSST photometric bands."
+    "calypso generates synthetic timeseries conditioned on two real-valued "
+    "parameters, drawn from a learned latent-space Gaussian. "
+    "This demo applies it to **circumbinary accretion**: explore how lightcurve "
+    "morphology changes with binary eccentricity $e_b$ and mass ratio $q_b$. "
+    "Accretion rates are emulated by calypso; luminosities are computed via an "
+    "$\\alpha$-disk model with blackbody emission integrated over LSST "
+    "photometric bands."
 )
+
+with st.expander("About calypso — method details", expanded=True):
+    st.markdown(
+        r"""
+**calypso** (Circumbinary Accretion Lightcurves Yielded via Predictive Sequence Outputs)
+is a parameter-conditioned stochastic surrogate model for circumbinary accretion
+time-series. Given a binary eccentricity $e_b$ and mass ratio $q_b$, calypso returns
+synthetic accretion-rate light curves for the total binary ($\dot{M}_b$) and each
+component ($\dot{M}_1$, $\dot{M}_2$).
+
+**Training data.** 100 2D hydrodynamic simulations of circumbinary accretion disks
+(`Arepo`, Navier-Stokes), spanning $e_b \in [0.0, 0.8]$ and $q_b \in [0.1, 1.0]$.
+From each simulation, 500 detrended 10-orbit windows of the concatenated
+$(\dot{M}_b, \dot{M}_1, \dot{M}_2)$ time series form the training matrix.
+
+**Method.** The model is built in three layers:
+
+1. **Global PCA basis.** A single SVD over the entire training matrix yields a
+   basis in which each window is represented by $k = 142$ coefficients
+   (capturing $\gtrsim 90\%$ of the variance).
+2. **Per-binary multivariate Gaussian.** For each training $(e_b, q_b)$, the
+   empirical mean and covariance of the coefficient vectors across the 500
+   windows define a $k$-dimensional Gaussian. This captures the *aleatoric*
+   uncertainty of the accretion process — including precession-driven long-term
+   modulation — directly in the latent space.
+3. **Cholesky-space interpolation.** To predict at unseen $(e_b, q_b)$, mean
+   vectors and Cholesky factors of the per-binary covariances are linearly
+   interpolated across the parameter grid, then recombined into a positive
+   semi-definite covariance. Sampling from the resulting Gaussian and projecting
+   back through the PCA basis produces the synthetic time series shown below.
+
+**Epistemic uncertainty** is implemented but disabled by default (it inflates
+predictive variance beyond what the held-out test set supports). Toggle it in
+the sidebar to inspect its effect.
+
+See Siwek et al. (2026) for the full derivation, validation against 13 held-out
+simulations, and parameter-space evaluation.
+        """
+    )
 
 # ---------------------------------------------------------------------------
 # Cached resources (loaded once per server session)
 # ---------------------------------------------------------------------------
 
-@st.cache_resource(show_spinner="Loading CALYPSO emulator...")
+@st.cache_resource(show_spinner="Loading calypso emulator...")
 def _load_emulator():
     return calypso.load_emulator()
 
@@ -257,7 +299,7 @@ st.sidebar.header("Display")
 _band_keys = list(LSST_FILTERS.keys())
 band = st.sidebar.selectbox("LSST band", _band_keys, index=_band_keys.index(BAND0))
 
-st.sidebar.subheader("CALYPSO (emulated)")
+st.sidebar.subheader("calypso (emulated)")
 cal_epistemic = st.sidebar.checkbox("Epistemic uncertainty", value=CAL_EPISTEMIC0, key="cal_epi")
 cal_show_draws = st.sidebar.checkbox("Show realisations", value=CAL_SHOW_DRAWS0, key="cal_draws")
 cal_n_draws = st.sidebar.slider("Realisations", 1, 64, CAL_N_DRAWS0, 1, key="cal_n") if cal_show_draws else 0
@@ -332,7 +374,7 @@ buffer = 0.02
 all_magb_vals = []
 all_mag12_vals = []
 
-# -- CALYPSO draws --
+# -- calypso draws --
 if cal_show_draws and cal_n_draws >= 1:
     alpha_c = _draw_alpha(cal_n_draws)
     for i in range(cal_n_draws):
@@ -345,7 +387,7 @@ if cal_show_draws and cal_n_draws >= 1:
         all_magb_vals.append(magb[i])
         all_mag12_vals.extend([mag1[i], mag2[i]])
 
-# -- CALYPSO mean +/- std --
+# -- calypso mean +/- std --
 if cal_show_stats and cal_n_stats >= 2:
     magb_mean, magb_std = magb[:cal_n_stats].mean(0), magb[:cal_n_stats].std(0)
     mag1_mean, mag1_std = mag1[:cal_n_stats].mean(0), mag1[:cal_n_stats].std(0)
