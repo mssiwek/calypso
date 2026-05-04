@@ -6,7 +6,11 @@ from typing import Optional, Tuple, List, Dict
 
 import numpy as np
 import dill
-import torch
+
+try:
+    import torch
+except ImportError:
+    torch = None
 
 from ..utils.config import RAW_TS_DIR, ts_filename as _ts_filename
 
@@ -165,12 +169,12 @@ def load_windows_for_binary(
     X = dset.X
     y = dset.y
 
-    if isinstance(X, torch.Tensor):
+    if torch is not None and isinstance(X, torch.Tensor):
         Xn = X.detach().cpu().numpy()
     else:
         Xn = np.asarray(X)
 
-    if isinstance(y, torch.Tensor):
+    if torch is not None and isinstance(y, torch.Tensor):
         yn = y.detach().cpu().numpy()
     else:
         yn = np.asarray(y)
