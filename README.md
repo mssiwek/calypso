@@ -17,13 +17,13 @@ Epistemic uncertainty is implemented but disabled by default (it inflates predic
 Requires Python ≥ 3.12.
 
 ```bash
-pip install calypso
+pip install calypso-emulator
 ```
 
 For the demo notebooks and apps:
 
 ```bash
-pip install "calypso[demo]"
+pip install "calypso-emulator[demo]"
 ```
 
 From source (editable):
