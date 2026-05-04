@@ -7,6 +7,9 @@ dist/
 *.egg-info/
 .claude/
 
+# Runtime artifact — shipped via Zenodo, fetched at runtime (do not commit)
+calypso/assets/*.pkl
+
 demo/*.ipynb
 demo/*.png
 demo/compare_radially_steady_vs_variable_models/
