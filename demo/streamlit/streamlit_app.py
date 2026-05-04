@@ -84,7 +84,7 @@ st.markdown(
 with st.expander("About calypso — method details", expanded=True):
     st.markdown(
         r"""
-**calypso** (Circumbinary Accretion Lightcurves Yielded via Predictive Sequence Outputs)
+**calypso** (Circumbinary Accretion Lightcurves Yielded via Probabilistic Spectral Operators)
 is a parameter-conditioned stochastic surrogate model for circumbinary accretion
 time-series. Given a binary eccentricity $e_b$ and mass ratio $q_b$, calypso returns
 synthetic accretion-rate light curves for the total binary ($\dot{M}_b$) and each

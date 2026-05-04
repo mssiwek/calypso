@@ -5,7 +5,7 @@
 [![DOI (code)](https://zenodo.org/badge/DOI/10.5281/zenodo.20028473.svg)](https://doi.org/10.5281/zenodo.20028473)
 [![DOI (artifact)](https://zenodo.org/badge/DOI/10.5281/zenodo.20027761.svg)](https://doi.org/10.5281/zenodo.20027761)
 
-**calypso** (Circumbinary Accretion Lightcurves Yielded via Predictive Sequence Outputs) is a parameter-conditioned stochastic surrogate model for circumbinary accretion time-series. Given a binary eccentricity `eb` and mass ratio `qb`, calypso returns synthetic accretion-rate light curves for the total binary (`Mb`) and each component (`M1`, `M2`), drawn from a multivariate Gaussian over a global PCA basis trained on hydrodynamic simulations.
+**calypso** (Circumbinary Accretion Lightcurves Yielded via Probabilistic Spectral Operators) is a parameter-conditioned stochastic surrogate model for circumbinary accretion time-series. Given a binary eccentricity `eb` and mass ratio `qb`, calypso returns synthetic accretion-rate light curves for the total binary (`Mb`) and each component (`M1`, `M2`), drawn from a multivariate Gaussian over a global PCA basis trained on hydrodynamic simulations.
 
 **▶ Try it interactively:** [calypso.streamlit.app](https://calypso.streamlit.app/) — sliders for $e_b$, $q_b$, mass, redshift, LSST band; renders synthetic light curves in real time.
 
