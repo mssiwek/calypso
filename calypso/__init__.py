@@ -7,7 +7,7 @@ from .interpolation import CholeskyInterpolator, train_cholesky_interpolator
 from .reconstruction import PCAEmulator
 from .runtime import load_emulator
 
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 
 __all__ = [
     "PCAModel",
