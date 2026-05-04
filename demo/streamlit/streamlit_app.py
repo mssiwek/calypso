@@ -150,8 +150,8 @@ def band_luminosity_samples(mdot_samples, radius_grid, lam_cm, mb, qb, f_edd):
     temperature = ad.T_R(radius_grid[None, :, :], mi, mdot_phys[:, :, None])
     radiance = ad.planck_lambda(lam_cm[:, None, None, None], temperature[None, :, :, :])
     surface_integrand = 4 * np.pi ** 2 * radius_grid[None, None, :, :] * radiance
-    spectral_luminosity = np.trapz(surface_integrand, radius_grid[None, None, :, :], axis=-1)
-    return np.trapz(spectral_luminosity, lam_cm, axis=0)
+    spectral_luminosity = np.trapezoid(surface_integrand, radius_grid[None, None, :, :], axis=-1)
+    return np.trapezoid(spectral_luminosity, lam_cm, axis=0)
 
 
 def get_band_wavelength_grid(z, band_name):
