@@ -29,12 +29,9 @@ from lsst import LSST_FILTERS
 from photometry import lum_to_mags
 
 import calypso
-from calypso.data.loader import load_single_component
 
 # Paper colour scheme (Okabe–Ito)
 COLORS = {"Mb": "#0072B2", "M1": "#009E73", "M2": "#D55E00"}
-# Darker variants for true (simulation) curves
-COLORS_TRUE = {"Mb": "#005A8C", "M1": "#007A59", "M2": "#A94600"}
 
 # ---------------------------------------------------------------------------
 # Initial UI settings — change these to set the default app state
@@ -53,10 +50,6 @@ CAL_SHOW_DRAWS0 = True
 CAL_N_DRAWS0 = 10
 CAL_SHOW_STATS0 = True
 CAL_N_STATS0 = 64
-
-TRUE_SHOW_DRAWS0 = False
-TRUE_N_DRAWS0 = 5
-TRUE_SHOW_STATS0 = False
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -124,23 +117,6 @@ simulations, and parameter-space evaluation.
 @st.cache_resource(show_spinner="Loading calypso emulator...")
 def _load_emulator():
     return calypso.load_emulator()
-
-
-NWINDOWS_TRUE = 500  # window count used in the simulation datasets
-
-
-@st.cache_resource(show_spinner="Loading simulation time series...")
-def _load_true_ts():
-    """Load true time series, index by (split, comp, eb, qb)."""
-    windows = {}
-    for split in ("test", "train"):
-        for comp in ("Mb", "M1", "M2"):
-            X, y = load_single_component(split, comp, NWINDOWS_TRUE, NORB, NBINS, LOG_MODEL)
-            for i in range(len(X)):
-                eb_r = round(float(X[i, 0]), 2)
-                qb_r = round(float(X[i, 1]), 2)
-                windows.setdefault((split, comp, eb_r, qb_r), []).append(y[i])
-    return windows
 
 
 # ---------------------------------------------------------------------------
@@ -218,71 +194,6 @@ def compute_curves(eb, qb, mb, ab, z, band, n_samples, seed, f_edd, epistemic_en
     return t, mag1, mag2, magb
 
 
-def _find_true_windows(windows, eb, qb, comp, n, seed, tol=0.02):
-    """Return up to *n* true time-series windows (linear scale) or None."""
-    rng = np.random.default_rng(seed)
-    eb_r, qb_r = round(eb, 2), round(qb, 2)
-    for split in ("test", "train"):
-        for (s, c, e, q), arrs in windows.items():
-            if s == split and c == comp and abs(e - eb_r) < tol and abs(q - qb_r) < tol:
-                idxs = rng.choice(len(arrs), size=min(n, len(arrs)), replace=False)
-                out = np.array([arrs[i] for i in idxs])
-                return 10 ** out if LOG_MODEL else out
-    return None
-
-
-
-@st.cache_data(show_spinner=False)
-def compute_true_draws(eb, qb, mb, ab, z, band, n_draws, seed, f_edd):
-    """Convert *n_draws* true simulation windows to magnitudes."""
-    windows = _load_true_ts()
-    true_seed = seed + 999
-    m1_true = _find_true_windows(windows, eb, qb, "M1", n_draws, true_seed)
-    m2_true = _find_true_windows(windows, eb, qb, "M2", n_draws, true_seed)
-    mb_true = _find_true_windows(windows, eb, qb, "Mb", n_draws, true_seed)
-    if m1_true is None or m2_true is None or mb_true is None:
-        return None
-
-    t, t0, _ = get_t(ab, mb)
-    lam_cm = get_band_wavelength_grid(z, band)
-    radius_primary, radius_secondary = precompute_disk_radii(t, t0, mb, ab, eb, qb)
-
-    qb_re = 1.0 / qb
-    lum1 = band_luminosity_samples(m1_true, radius_primary, lam_cm, mb, qb_re, f_edd)
-    lum2 = band_luminosity_samples(m2_true, radius_secondary, lam_cm, mb, qb, f_edd)
-    lumb = band_luminosity_samples(mb_true, radius_primary, lam_cm, mb, qb, f_edd)
-
-    mag1 = np.asarray(lum_to_mags(lum1, band, z))
-    mag2 = np.asarray(lum_to_mags(lum2, band, z))
-    magb = np.asarray(lum_to_mags(lumb, band, z))
-    return mag1, mag2, magb
-
-
-@st.cache_data(show_spinner="Computing true statistics...")
-def compute_true_stats(eb, qb, mb, ab, z, band, f_edd):
-    """Push ALL true windows through the pipeline, return mean/std in mag space."""
-    windows = _load_true_ts()
-    # Gather all windows (linear scale) per component
-    comps = {}
-    for comp in ("M1", "M2", "Mb"):
-        w = _find_true_windows(windows, eb, qb, comp, NWINDOWS_TRUE, seed=0)
-        if w is None:
-            return None
-        comps[comp] = w
-
-    t, t0, _ = get_t(ab, mb)
-    lam_cm = get_band_wavelength_grid(z, band)
-    radius_primary, radius_secondary = precompute_disk_radii(t, t0, mb, ab, eb, qb)
-
-    result = {}
-    for comp, radius in [("M1", radius_primary), ("M2", radius_secondary), ("Mb", radius_primary)]:
-        lum = band_luminosity_samples(comps[comp], radius, lam_cm, mb, qb, f_edd)
-        mag = np.asarray(lum_to_mags(lum, band, z))  # (N_windows, T)
-        result[comp] = {"mean": mag.mean(axis=0), "std": mag.std(axis=0)}
-
-    return result
-
-
 # ---------------------------------------------------------------------------
 # Sidebar controls
 # ---------------------------------------------------------------------------
@@ -305,11 +216,6 @@ cal_show_draws = st.sidebar.checkbox("Show realisations", value=CAL_SHOW_DRAWS0,
 cal_n_draws = st.sidebar.slider("Realisations", 1, 64, CAL_N_DRAWS0, 1, key="cal_n") if cal_show_draws else 0
 cal_show_stats = st.sidebar.checkbox("Show mean +/- std", value=CAL_SHOW_STATS0, key="cal_stats")
 cal_n_stats = st.sidebar.slider("Samples for stats", 8, 256, CAL_N_STATS0, 8, key="cal_nstats") if cal_show_stats else 0
-
-st.sidebar.subheader("True (simulation)")
-true_show_draws = st.sidebar.checkbox("Show realisations", value=TRUE_SHOW_DRAWS0, key="true_draws")
-true_n_draws = st.sidebar.slider("Realisations", 1, 64, TRUE_N_DRAWS0, 1, key="true_n") if true_show_draws else 0
-true_show_stats = st.sidebar.checkbox("Show mean +/- std", value=TRUE_SHOW_STATS0, key="true_stats")
 
 if "seed" not in st.session_state:
     st.session_state.seed = 0
@@ -334,24 +240,6 @@ with st.spinner("Computing lightcurves..."):
     t, mag1, mag2, magb = compute_curves(
         eb, qb, mb, ab, z, band, cal_total, st.session_state.seed, f_edd, cal_epistemic,
     )
-    true_draw_curves = None
-    if true_show_draws and true_n_draws >= 1:
-        true_draw_curves = compute_true_draws(
-            eb, qb, mb, ab, z, band, true_n_draws, st.session_state.seed, f_edd,
-        )
-        if true_draw_curves is None:
-            st.warning(
-                f"No simulation windows available at eb={eb:.2f}, qb={qb:.2f}; "
-                "true realisations not shown. Try an (eb, qb) on the simulation grid."
-            )
-    true_stat_curves = None
-    if true_show_stats:
-        true_stat_curves = compute_true_stats(eb, qb, mb, ab, z, band, f_edd)
-        if true_stat_curves is None:
-            st.warning(
-                f"No simulation windows available at eb={eb:.2f}, qb={qb:.2f}; "
-                "true mean/std not shown."
-            )
 
 t_years = t / YR
 mag_limit = lsst_filters[band]["mag_limit_single"]
@@ -378,9 +266,9 @@ all_mag12_vals = []
 if cal_show_draws and cal_n_draws >= 1:
     alpha_c = _draw_alpha(cal_n_draws)
     for i in range(cal_n_draws):
-        label_b = r"synth $\dot{M}_b$" if i == 0 else None
-        label_1 = r"synth $\dot{M}_1$" if i == 0 else None
-        label_2 = r"synth $\dot{M}_2$" if i == 0 else None
+        label_b = r"$\dot{M}_b$" if i == 0 else None
+        label_1 = r"$\dot{M}_1$" if i == 0 else None
+        label_2 = r"$\dot{M}_2$" if i == 0 else None
         ax1.plot(t_years, magb[i], lw=1.6, color=COLORS["Mb"], alpha=alpha_c, label=label_b, zorder=2)
         ax2.plot(t_years, mag1[i], lw=1.6, color=COLORS["M1"], alpha=alpha_c, label=label_1, zorder=2)
         ax2.plot(t_years, mag2[i], lw=1.6, color=COLORS["M2"], alpha=alpha_c, label=label_2, zorder=2)
@@ -404,36 +292,6 @@ if cal_show_stats and cal_n_stats >= 2:
     all_magb_vals.extend([magb_mean - magb_std, magb_mean + magb_std])
     all_mag12_vals.extend([mag1_mean - mag1_std, mag1_mean + mag1_std,
                            mag2_mean - mag2_std, mag2_mean + mag2_std])
-
-# -- True draws --
-if true_draw_curves is not None:
-    alpha_t = _draw_alpha(len(true_draw_curves[0]))
-    for i in range(len(true_draw_curves[0])):
-        label_b = r"true $\dot{M}_b$" if i == 0 else None
-        label_1 = r"true $\dot{M}_1$" if i == 0 else None
-        label_2 = r"true $\dot{M}_2$" if i == 0 else None
-        ax1.plot(t_years, true_draw_curves[2][i], lw=1.4, ls="--", color=COLORS_TRUE["Mb"], alpha=alpha_t, label=label_b, zorder=3)
-        ax2.plot(t_years, true_draw_curves[0][i], lw=1.4, ls="--", color=COLORS_TRUE["M1"], alpha=alpha_t, label=label_1, zorder=3)
-        ax2.plot(t_years, true_draw_curves[1][i], lw=1.4, ls="--", color=COLORS_TRUE["M2"], alpha=alpha_t, label=label_2, zorder=3)
-        all_magb_vals.append(true_draw_curves[2][i])
-        all_mag12_vals.extend([true_draw_curves[0][i], true_draw_curves[1][i]])
-
-# -- True mean +/- std (from precomputed stats — fast) --
-if true_stat_curves is not None:
-    ts = true_stat_curves
-    _show_true_stats_label = true_draw_curves is None
-    lbl_tb = r"true $\dot{M}_b$ mean $\pm 1\sigma$" if _show_true_stats_label else None
-    lbl_t1 = r"true primary $\dot{M}_1$ mean $\pm 1\sigma$" if _show_true_stats_label else None
-    lbl_t2 = r"true secondary $\dot{M}_2$ mean $\pm 1\sigma$" if _show_true_stats_label else None
-    ax1.plot(t_years, ts["Mb"]["mean"], lw=2.2, ls="--", color=COLORS_TRUE["Mb"], label=lbl_tb, zorder=5)
-    ax1.fill_between(t_years, ts["Mb"]["mean"] - ts["Mb"]["std"], ts["Mb"]["mean"] + ts["Mb"]["std"], color=COLORS_TRUE["Mb"], alpha=0.18, zorder=1)
-    ax2.plot(t_years, ts["M1"]["mean"], lw=2.2, ls="--", color=COLORS_TRUE["M1"], label=lbl_t1, zorder=5)
-    ax2.fill_between(t_years, ts["M1"]["mean"] - ts["M1"]["std"], ts["M1"]["mean"] + ts["M1"]["std"], color=COLORS_TRUE["M1"], alpha=0.18, zorder=1)
-    ax2.plot(t_years, ts["M2"]["mean"], lw=2.2, ls="--", color=COLORS_TRUE["M2"], label=lbl_t2, zorder=5)
-    ax2.fill_between(t_years, ts["M2"]["mean"] - ts["M2"]["std"], ts["M2"]["mean"] + ts["M2"]["std"], color=COLORS_TRUE["M2"], alpha=0.18, zorder=1)
-    all_magb_vals.extend([ts["Mb"]["mean"] - ts["Mb"]["std"], ts["Mb"]["mean"] + ts["Mb"]["std"]])
-    all_mag12_vals.extend([ts["M1"]["mean"] - ts["M1"]["std"], ts["M1"]["mean"] + ts["M1"]["std"],
-                           ts["M2"]["mean"] - ts["M2"]["std"], ts["M2"]["mean"] + ts["M2"]["std"]])
 
 # -- Y-limits and decorations --
 if all_magb_vals:
