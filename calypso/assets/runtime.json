@@ -10,8 +10,10 @@
     "norb": 10,
     "nwindows": 500
   },
+  "k_final": 142,
+  "k_max": 3000,
   "runtime_artifact": "calypso_pca_emulator.pkl",
-  "source_config": "/Users/magda/Work/projects/ongoing/CALYPSO/calypso-dev/research/configs/pca_multi_component.yaml",
+  "source_config": "/Users/magda/Work/projects/ongoing/CALYPSO/calypso-dev/research/results/pca/validation/fiducial_nw500_norb10/final_config.yaml",
   "ts_files": [
     "TS_train_Mb_nwindows500_norb10_nbinsPb100_log.pkl",
     "TS_train_M1_nwindows500_norb10_nbinsPb100_log.pkl",

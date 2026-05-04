@@ -1,66 +1,67 @@
-# ============================================
-# CALYPSO-PCA multi-component configuration
-# Joint emulator for Mb, M1, and M2 accretion rates
-# ============================================
-
 paths:
-  data: "./data/TimeSeries"          # TS_*.pkl lives here
-  results_root: "./results"         # root where outputs go (results/pca/...)
-
+  data: ./data/TimeSeries
+  results_root: ./results
 run:
-  model: "pca"
-  id: "fiducial"     # run family name
-  mail: "mss931@nyu.edu"
-
+  model: pca
+  id: fiducial
+  mail: mss931@nyu.edu
 dataset:
-  split_train: "train"
-  split_val: "test"
+  split_train: train
+  split_val: test
   nwindows: 500
   norb: 10
   nbins: 100
   log: true
   phase_align: true
-  phase_align_fmin: 0.1
-  phase_align_fmax: 5.0
-
+  phase_align_fmin: 0.05
+  phase_align_fmax: 10.0
+  pfreq_mode_prominence_rel: 0.15
+  pfreq_mode_min_rel_height: 0.4
+  pfreq_multimodal_secondary_height_ratio: 0.5
 pca:
-  components: ["Mb", "M1", "M2"]      # train joint PCA on all three
-
+  components:
+  - Mb
+  - M1
+  - M2
 basis:
-  k: 100
-  max_windows: null                  # cap total windows loaded (debug)
-  randomized: false                  # if you later add randomized SVD
-
+  k_max: null
+  max_windows: null
+  randomized: false
+model_selection:
+  k_final: 142
+  selection_metric: z_scored_mse
 projection:
-  cov: "full"                        # diag | full
-  shrink: 0.1                        # used if full
-
+  cov: full
+  shrink: 0.1
 interp:
-  kind: "cholesky_linear"
+  kind: cholesky_linear
   epistemic_uncertainty:
     enabled: false
-    epsilon: 1.e-8
+    epsilon: 1.0e-08
     alpha: 2.0
-
 validate:
-  split: "test"
+  split: test
   ncases: 12
   case_seed: 0
-  plot_space: "linear"               # log | linear
+  plot_space: linear
   nsynth: 500
   use_nn_corr: true
-  eb_values: [0.55, 0.35, 0.15]
-  qb_values: [0.95, 0.75, 0.45]
-
+  eb_values:
+  - 0.55
+  - 0.35
+  - 0.15
+  qb_values:
+  - 0.95
+  - 0.75
+  - 0.45
 outputs:
-  backend_dir: "pca"                 # results/pca/...
+  backend_dir: pca
   save_models: true
   save_coeffs: true
   save_diagnostics: true
-
 slurm:
-  partition: "cpu_requeue"           # PCA should be CPU-friendly
-  mem: "16G"
-  time: "01:00:00"
+  partition: cpu_requeue
+  mem: 16G
+  time: 01:00:00
   gpus: 0
-  mail_types: "START,FAIL,END"
+  mail_types: START,FAIL,END
