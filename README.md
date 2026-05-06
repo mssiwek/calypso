@@ -76,6 +76,46 @@ samples = emu.predict(eb=0.35, qb=0.75, n_samples=16, rng=rng)
 
 Lower-level building blocks (`PCAModel`, `CholeskyInterpolator`, `fit_pca_svd_multicomponent`, `train_cholesky_interpolator`, `reconstruct_components`) are also exposed for users who want to retrain or extend the model.
 
+## Likelihood for parameter inference
+
+Because the emulator is a multivariate Gaussian over PCA coefficients, the likelihood of $(e_b, q_b)$ given an observed time series $y_\mathrm{obs}$ has a closed form. Project the observation onto the orthonormal PCA basis $V$,
+
+$$c_\mathrm{obs} = V^\top (y_\mathrm{obs} - \bar y),$$
+
+where $\bar y$ is the training-set column mean. Then for any candidate $(e_b, q_b)$,
+
+$$\log L(e_b, q_b \mid y_\mathrm{obs}) = -\tfrac{1}{2} (c_\mathrm{obs} - \mu)^\top \Sigma^{-1} (c_\mathrm{obs} - \mu) - \tfrac{1}{2} \log |\Sigma| + \mathrm{const},$$
+
+with $(\mu, \Sigma) = (\mu(e_b, q_b), \Sigma(e_b, q_b))$ the interpolated coefficient mean and covariance. The first term is the squared Mahalanobis distance between the observed coefficients and the predicted mean; the second penalises parameter points where $\Sigma$ has a large determinant. Because $V$ is orthonormal the change-of-variables Jacobian is unity, so this is exactly the likelihood in time-series space (see Appendix A of the paper for the derivation).
+
+Computing it from the public API:
+
+```python
+import numpy as np
+import calypso
+
+emu = calypso.load_emulator()
+
+# Pre-process y_obs identically to the training data: concatenated
+# (Mb, M1, M2) in that order, same de-trending and time grid.
+y_obs = ...  # shape (3T,)
+
+V_T   = emu.pca_model.components_   # (K, 3T) -- rows are basis vectors
+bar_y = emu.pca_model.mean_         # (3T,)
+c_obs = V_T @ (y_obs - bar_y)       # (K,)
+
+def log_likelihood(eb, qb):
+    mu, Sigma = emu.interpolator.predict_distribution(eb, qb)
+    _, logdet = np.linalg.slogdet(Sigma)
+    delta = c_obs - mu
+    mahal = delta @ np.linalg.solve(Sigma, delta)
+    return -0.5 * mahal - 0.5 * logdet
+```
+
+Combine with any prior on the training-grid support and feed into MCMC or nested sampling to obtain a posterior on $(e_b, q_b)$.
+
+**Caveats.** The likelihood assumes `y_obs` has been pre-processed identically to the training data. For real photometric observations (e.g. LSST), this requires first inverting the radiative-transfer pipeline to recover an estimate of the accretion-rate time series before projecting onto the PCA basis. The likelihood also inherits the modelling assumptions of the training simulations (locally isothermal EOS, fixed $h/r$, fixed $\alpha$).
+
 ## Runtime artifacts
 
 The trained emulator (PCA basis + per-binary Cholesky factors) is shipped as a single binary artifact rather than packaged into the wheel — keeping the install lightweight and decoupling code releases from retraining. On the first call to `load_emulator()`, calypso resolves the artifact name from a packaged manifest and downloads it from Zenodo into a local cache. Subsequent calls reuse the cached file.
